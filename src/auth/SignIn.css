@@ -1,0 +1,105 @@
+/* TEDx Signature Theme Colors */
+:root {
+  --ted-red: #eb0028;
+  --ted-black: #000000;
+  --ted-dark-grey: #1a1a1a;
+  --ted-white: #ffffff;
+}
+
+.signin-container {
+  background-color: var(--ted-black);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--ted-white);
+  margin: 0;
+}
+
+.signin-card {
+  width: 90%;
+  max-width: 400px;
+  padding: 40px;
+  text-align: center;
+}
+
+.signin-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+}
+
+.signin-title span {
+  color: var(--ted-red);
+}
+
+.signin-subtitle {
+  font-size: 0.85rem;
+  margin-bottom: 50px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-weight: 300;
+  opacity: 0.9;
+}
+
+.input-group {
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--ted-white);
+  text-transform: uppercase;
+}
+
+.role-select {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--ted-dark-grey);
+  color: var(--ted-white);
+  border: 1px solid #333;
+  border-radius: 0; /* TEDx style often uses sharp edges */
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.role-select:focus {
+  border-color: var(--ted-red);
+}
+
+.google-btn {
+  width: 100%;
+  padding: 16px;
+  background-color: var(--ted-red);
+  color: var(--ted-white);
+  border: none;
+  border-radius: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 10px;
+}
+
+.google-btn:hover {
+  background-color: #c40021;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(235, 0, 40, 0.3);
+}
+
+.google-btn:active {
+  transform: translateY(0);
+}
