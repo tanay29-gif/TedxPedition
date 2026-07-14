@@ -22,4 +22,3 @@ const db = getFirestore(app);
 
 export { auth, googleProvider, db };
 export default app;
-//checking
