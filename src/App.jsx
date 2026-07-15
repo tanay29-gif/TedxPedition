@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SignIn from './auth/signin.jsx';
 import ProtectedRoute from './component/ProctectedRoute.jsx';
+import ParticipantDashboard from './participant/ParticipantDashboard.jsx';
 
 const SuperAdminDashboard = () => <h1>Welcome Super Admin</h1>;
 const AdminDashboard = () => <h1>Welcome Admin</h1>;
-const ParticipantDashboard = () => <h1>Welcome Participant</h1>;
 
 function App() {
   return (
