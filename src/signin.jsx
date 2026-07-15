@@ -83,9 +83,9 @@ const SignIn = () => {
 
         <div className="input-group">
           <label className="input-label">Select your Role</label>
-          <select
-            className="role-select"
-            value={role}
+          <select 
+            className="role-select" 
+            value={role} 
             onChange={(e) => setRole(e.target.value)}
           >
             <option value="super-admin">Super Admin</option>
