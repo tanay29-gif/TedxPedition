@@ -1,0 +1,236 @@
+/* SuperAdminDashboard.css - Refined Dark TEDx Theme */
+
+/* Apply black background to the entire page */
+body {
+  background-color: #000000;
+  margin: 0;
+  color: #e5e7eb; /* Standard near-white text color */
+}
+
+.super-admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+}
+
+.tedx-header {
+  color: #e62b1e; /* Official TED Red */
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-bottom: 4px solid #ffffff; /* White separator for contrast on black */
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.dashboard-card {
+  background-color: #1a1a1a; /* Dark gray for cards to provide depth against black */
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.05); /* Subtle light shadow for dark mode */
+  border-top: 4px solid #e62b1e; /* Accent red border at top */
+}
+
+.card-title {
+  color: #ffffff; /* Pure white for section headers */
+  margin-top: 0;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+/* Event Controls */
+.event-controls {
+  display: flex;
+  gap: 15px;
+}
+
+.btn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-start {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff; /* White outlined button */
+}
+.btn-start:hover {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.btn-pause {
+  background-color: #fadb14; /* Keeping original yellow for visibility */
+  color: #000000;
+}
+
+.btn-end {
+  background-color: #e62b1e; /* Red for destructive action */
+  color: #ffffff;
+}
+
+/* Forms and Inputs */
+.add-admin-form {
+  background-color: #262626; /* Darker background for form areas */
+  padding: 25px;
+  border-radius: 8px;
+  border: 1px solid #444; /* Subtle gray border */
+  margin-bottom: 40px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.tedx-input {
+  background-color: #0a0a0a; /* Very dark input fields */
+  color: #e5e7eb;
+  padding: 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.tedx-input:focus {
+  outline: none;
+  border-color: #e62b1e; /* Red border on focus */
+}
+
+.tedx-input::placeholder {
+  color: #777; /* Subdued placeholder text */
+}
+
+.btn-submit {
+  background-color: #e62b1e;
+  color: #ffffff;
+}
+.btn-submit:hover {
+  background-color: #b92218; /* Darker red on hover */
+}
+
+/* Lists and Tables */
+.data-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-list {
+  list-style: none;
+  padding: 0;
+}
+
+.data-item, .admin-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #333; /* Dark separator */
+}
+
+.admin-card {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.data-item:last-child {
+  border-bottom: none;
+}
+
+/* Red Delete Button (Keeping original functionality but updated styles) */
+.btn-delete {
+  background-color: transparent;
+  color: #ef4444; /* Brighter red for visibility against black */
+  border: 1px solid #ef4444;
+  padding: 6px 12px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-delete:hover {
+  background-color: #ef4444;
+  color: white;
+}
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background-color: #1a1a1a;
+  padding: 30px;
+  border-radius: 8px;
+  border-top: 4px solid #e62b1e;
+  width: 400px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.btn-edit {
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-edit:hover { background-color: #555; }
+
+.btn-cancel {
+  background-color: transparent;
+  color: #ccc;
+  border: 1px solid #555;
+  margin-left: 10px;
+}
+/* Role Badges */
+.role-badge {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-left: 10px;
+  text-transform: uppercase;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.role-badge.super {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.role-badge.stall {
+  background-color: #e62b1e;
+  color: #ffffff;
+}
