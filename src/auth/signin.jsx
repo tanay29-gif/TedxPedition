@@ -1,75 +1,51 @@
 import { useState } from 'react';
 import { auth, googleProvider, db } from '../firebase/firebase.js';
 import { signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import './SignIn.css'; // Importing the CSS file
 
+// Roles and team assignments are set up ahead of time by the admin in the
+// `users` collection (one doc per person, keyed by their Firebase uid).
+// Sign-in here just authenticates with Google, then looks up that doc to
+// find out who this person is and where they should land.
 const SignIn = () => {
-  const [role, setRole] = useState('participant');
-  const [teamCode, setTeamCode] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
     setError('');
-
-    // Participants must enter a team code so we can link them to a team doc
-    if (role === 'participant' && !teamCode.trim()) {
-      setError('Please enter your Team Code.');
-      return;
-    }
+    setLoading(true);
 
     try {
-      let teamId = null;
-
-      if (role === 'participant') {
-        // Look up the team by its code
-        const teamsRef = collection(db, 'teams');
-        const q = query(teamsRef, where('teamCode', '==', teamCode.trim().toUpperCase()));
-        const teamSnap = await getDocs(q);
-
-        if (teamSnap.empty) {
-          setError('No team found with that code. Check with your admin.');
-          return;
-        }
-        teamId = teamSnap.docs[0].id;
-      }
-
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // Firestore Reference
-      const userRef = doc(db, "users", user.uid);
+      const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
 
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        role: role,
-        ...(teamId && { teamId }),
-      };
-
       if (!userSnap.exists()) {
-        // Create new user with selected role
-        await setDoc(userRef, {
-          ...userData,
-          createdAt: new Date()
-        });
-      } else {
-        await updateDoc(userRef, {
-          ...userData,
-          lastLogin: new Date() // Optional: track when they last signed in
-        });
+        setError(
+          "Your account isn't registered yet. Ask your admin to add you before signing in."
+        );
+        setLoading(false);
+        return;
       }
 
-      // Redirect to specific dashboard
-      navigate(`/${role}-dashboard`);
+      const { role } = userSnap.data();
 
+      if (!role) {
+        setError('No role assigned to your account yet. Contact your admin.');
+        setLoading(false);
+        return;
+      }
+
+      navigate(`/${role}-dashboard`);
     } catch (error) {
-      console.error("Error signing in: ", error);
-      setError('Sign-in failed. Please check your Firebase configuration.');
+      console.error('Error signing in: ', error);
+      setError('Sign-in failed. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -81,36 +57,10 @@ const SignIn = () => {
         </h1>
         <p className="signin-subtitle">Ideas Worth Spreading</p>
 
-        <div className="input-group">
-          <label className="input-label">Select your Role</label>
-          <select
-            className="role-select"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="super-admin">Super Admin</option>
-            <option value="admin">Admin</option>
-            <option value="participant">Participant</option>
-          </select>
-        </div>
-
-        {role === 'participant' && (
-          <div className="input-group">
-            <label className="input-label">Team Code</label>
-            <input
-              className="role-select"
-              type="text"
-              placeholder="e.g. TEDX07"
-              value={teamCode}
-              onChange={(e) => setTeamCode(e.target.value)}
-            />
-          </div>
-        )}
-
         {error && <p style={{ color: 'red', fontSize: '0.9rem' }}>{error}</p>}
 
-        <button className="google-btn" onClick={handleGoogleSignIn}>
-          Sign in with Google
+        <button className="google-btn" onClick={handleGoogleSignIn} disabled={loading}>
+          {loading ? 'Signing in...' : 'Sign in with Google'}
         </button>
       </div>
     </div>

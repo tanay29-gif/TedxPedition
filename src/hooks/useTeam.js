@@ -1,17 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { auth, db } from '../firebase/firebase.js';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * useTeam
- * Subscribes in realtime to the signed-in participant's team document.
- * Returns { team, teamId, loading, error }.
+ * Fetches the signed-in participant's team data ONCE per call (not a live
+ * subscription). With many teams all writing coin/clue/stall updates during
+ * the event, a real-time listener on every participant's screen would rack
+ * up Firestore reads fast. Instead, this hook fetches on mount and exposes
+ * a `refresh()` function so the dashboard can have a manual "Refresh" button.
  *
- * How it works:
- * 1. Reads the current user's doc from `users/{uid}` to find their teamId.
- * 2. Opens a live subscription (onSnapshot) to `teams/{teamId}`.
- * 3. Any change an admin makes (new clue, coins, stall update) appears
- *    instantly on the participant's screen — no refresh needed.
+ * Returns { team, teamId, loading, error, refresh }.
  */
 export function useTeam() {
   const [team, setTeam] = useState(null);
@@ -19,59 +18,57 @@ export function useTeam() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let unsubscribeTeam = () => {};
+  const fetchTeam = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setLoading(false);
+      setError('Not signed in.');
+      return;
+    }
 
-    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
-      if (!user) {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists() || !userSnap.data().teamId) {
+        setError('No team linked to this account yet.');
         setLoading(false);
-        setError('Not signed in.');
         return;
       }
 
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
+      const linkedTeamId = userSnap.data().teamId;
+      setTeamId(linkedTeamId);
 
-        if (!userSnap.exists() || !userSnap.data().teamId) {
-          setLoading(false);
-          setError('No team linked to this account yet.');
-          return;
-        }
+      const teamSnap = await getDoc(doc(db, 'teams', linkedTeamId));
 
-        const linkedTeamId = userSnap.data().teamId;
-        setTeamId(linkedTeamId);
-
-        // Live subscription — updates automatically when admin changes anything
-        unsubscribeTeam = onSnapshot(
-          doc(db, 'teams', linkedTeamId),
-          (teamSnap) => {
-            if (teamSnap.exists()) {
-              setTeam({ id: teamSnap.id, ...teamSnap.data() });
-              setError(null);
-            } else {
-              setError('Team data not found.');
-            }
-            setLoading(false);
-          },
-          (err) => {
-            console.error('Team subscription error:', err);
-            setError('Could not load team data.');
-            setLoading(false);
-          }
-        );
-      } catch (err) {
-        console.error('useTeam error:', err);
-        setError('Something went wrong loading your team.');
+      if (!teamSnap.exists()) {
+        setError('Team data not found.');
         setLoading(false);
+        return;
       }
-    });
 
-    return () => {
-      unsubscribeAuth();
-      unsubscribeTeam();
-    };
+      setTeam({ id: teamSnap.id, ...teamSnap.data() });
+    } catch (err) {
+      console.error('useTeam fetch error:', err);
+      setError('Could not load team data.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { team, teamId, loading, error };
+  useEffect(() => {
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (user) fetchTeam();
+      else {
+        setLoading(false);
+        setError('Not signed in.');
+      }
+    });
+    return () => unsubscribeAuth();
+  }, [fetchTeam]);
+
+  return { team, teamId, loading, error, refresh: fetchTeam };
 }
