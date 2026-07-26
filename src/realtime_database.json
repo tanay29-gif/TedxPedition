@@ -1,0 +1,24 @@
+
+{
+  "leaderboard": {
+    "TEAM001": {
+      "teamName": "NiRaHi",
+      "totalScore": 0,
+      "totalTime": 0,
+      "currentStall": 1
+    }
+  },
+
+  "activeTeams": {
+    "TEAM001": {
+      "currentStall": 1,
+      "status": "PLAYING",
+      "updatedAt": 0
+    }
+  },
+
+  "eventStatus": {
+    "status": "RUNNING",
+    "message": ""
+  }
+}

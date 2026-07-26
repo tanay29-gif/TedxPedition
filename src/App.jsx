@@ -1,41 +1,132 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import SignIn from './auth/signin.jsx';
-import ProtectedRoute from './component/ProctectedRoute.jsx';
+import { Route, Routes } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 
-const SuperAdminDashboard = () => <h1>Welcome Super Admin</h1>;
-const AdminDashboard = () => <h1>Welcome Admin</h1>;
-const ParticipantDashboard = () => <h1>Welcome Participant</h1>;
+import AdminDashboard from "./pages/AdminDashboard";
+import HomeRedirect from "./pages/HomeRedirect";
+import ParticipantDashboard from "./pages/ParticipantDashboard";
+import SignIn from "./pages/SignIn";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+import FirestoreTest from "./pages/FirestoreTest";
+import ActiveTeamTest from "./tests/ActiveTeamTest";
+import AdminTest from "./tests/AdminTest";
+import EventStatusTest from "./tests/EventStatusTest";
+import HintTest from "./tests/HintTest";
+import LeaderboardTest from "./tests/LeaderboardTest";
+import ProgressTest from "./tests/ProgressTest";
+import QRTest from "./tests/QRTest";
+import StallTest from "./tests/StallTest";
+import TeamTest from "./tests/TeamTest";
 function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/signin" element={<SignIn />} />
-        
-        <Route path="/super-admin-dashboard" element={
-          <ProtectedRoute requiredRole="super-admin">
-            <SuperAdminDashboard />
-          </ProtectedRoute>
-        } />
 
-        <Route path="/admin-dashboard" element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
+    return (
 
-        <Route path="/participant-dashboard" element={
-          <ProtectedRoute requiredRole="participant">
-            <ParticipantDashboard />
-          </ProtectedRoute>
-        } />
 
-        {/* Redirect root to signin if not logged in */}
-        <Route path="/" element={<Navigate to="/signin" />} />
-        <Route path="/unauthorized" element={<h1>You do not have access to this page.</h1>} />
-      </Routes>
-    </Router>
-  );
+        <Routes>
+             <Route
+    path="/home"
+    element={<LandingPage />}
+/>
+
+
+            <Route
+    path="/test/event-status"
+    element={<EventStatusTest />}
+/>
+
+
+            <Route
+    path="/test/active-team"
+    element={<ActiveTeamTest />}
+/>
+            // testing the CRUD operations for the leaderboard collection in realtime database
+
+            <Route
+    path="/test/leaderboard"
+    element={<LeaderboardTest />}
+/>
+
+
+            <Route
+
+    path="/test/admin"
+
+    element={<AdminTest />}
+
+/>
+
+
+
+            <Route
+
+    path="/test/qr"
+
+    element={<QRTest />}
+
+/>
+
+            <Route
+
+    path="/test/hints"
+
+    element={<HintTest />}
+
+/>
+
+            <Route
+
+    path="/test/stalls"
+
+    element={<StallTest />}
+
+/>
+//testing the CRUD operations for the progress collection in firestore
+            <Route
+    path="/test/progress"
+    element={<ProgressTest />}
+/>
+            //testing the CRUD operations for the team collection in firestore
+            <Route
+    path="/test/team"
+    element={<TeamTest />}
+/>
+            <Route
+    path="/firestore-test"
+    element={<FirestoreTest />}
+/>
+
+            <Route
+                path="/"
+                element={<HomeRedirect />}
+            />
+
+            <Route
+                path="/login"
+                element={<SignIn />}
+            />
+
+            <Route
+                path="/admin"
+                element={
+                    <ProtectedRoute adminOnly={true}>
+                        <AdminDashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/participant"
+                element={
+                    <ProtectedRoute>
+                        <ParticipantDashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+        </Routes>
+
+    );
+
 }
 
 export default App;
