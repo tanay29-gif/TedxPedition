@@ -1,0 +1,337 @@
+.admin-dashboard {
+  min-height: 100vh;
+  background-color: var(--bg-black);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 8%;
+  background-color: rgba(10, 10, 10, 0.85);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.admin-header h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.admin-header span {
+  color: var(--primary-red);
+}
+
+.admin-name {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-grey);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Main Content */
+.admin-content {
+  flex: 1;
+  padding: 40px 8%;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Stall Selector */
+.stall-selector-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.selector-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selector-title-row h3 {
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  color: var(--text-grey);
+  letter-spacing: 0.5px;
+}
+
+.active-stall-pill {
+  background-color: rgba(225, 6, 0, 0.1);
+  border: 1px solid var(--primary-red);
+  color: var(--primary-red);
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.stall-buttons-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.stall-select-btn {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  color: var(--text-grey);
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-normal);
+}
+
+.stall-select-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border-color: var(--text-grey);
+}
+
+.stall-select-btn.active {
+  background-color: var(--primary-red);
+  color: #fff;
+  border-color: var(--primary-red);
+  box-shadow: 0 0 10px var(--primary-red-glow);
+}
+
+/* Teams Grid */
+.admin-teams-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+}
+
+.admin-action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: fit-content;
+}
+
+.admin-action-card h3, .active-teams-list-card h3, .scoring-panel h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-grey);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.admin-action-card p {
+  color: var(--text-grey);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.admin-error-box {
+  background-color: rgba(225, 6, 0, 0.1);
+  border: 1px solid var(--primary-red);
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.admin-scan-btn {
+  width: 100%;
+  padding: 14px;
+}
+
+/* Active Teams Table */
+.active-teams-list-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-loading, .empty-list-placeholder {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.active-teams-table-wrapper {
+  overflow-x: auto;
+}
+
+.active-teams-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.active-teams-table th, .active-teams-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.active-teams-table th {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.active-teams-table td.bold {
+  font-weight: 600;
+  color: #fff;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.playing {
+  background-color: rgba(0, 176, 255, 0.1);
+  color: #00b0ff;
+  border: 1px solid rgba(0, 176, 255, 0.2);
+}
+
+.status-badge.verifying {
+  background-color: rgba(255, 145, 0, 0.1);
+  color: var(--warning-orange);
+  border: 1px solid rgba(255, 145, 0, 0.2);
+}
+
+.status-badge.finished {
+  background-color: rgba(0, 230, 118, 0.1);
+  color: var(--success-green);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+/* Verifying Row highlight */
+.needs-verification-row {
+  background-color: rgba(255, 145, 0, 0.03);
+}
+
+.needs-verification-row td {
+  border-bottom-color: rgba(255, 145, 0, 0.2);
+}
+
+.glow-btn {
+  background-color: var(--warning-orange) !important;
+  color: #000 !important;
+  box-shadow: 0 0 10px rgba(255, 145, 0, 0.4);
+  animation: scoreButtonPulse 1.5s infinite;
+}
+
+@keyframes scoreButtonPulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 145, 0, 0.4); }
+  50% { box-shadow: 0 0 15px rgba(255, 145, 0, 0.8); }
+}
+
+/* Scoring Sheet Form */
+.scoring-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.team-progress-info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.info-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-stat .lbl {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.info-stat .val {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.scoring-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-group label {
+  font-size: 0.85rem;
+  color: var(--text-grey);
+  font-weight: 600;
+}
+
+.submit-score-btn {
+  padding: 16px;
+  font-size: 1.05rem;
+}
+
+/* Responsive */
+@media(max-width: 900px) {
+  .admin-teams-grid {
+    grid-template-columns: 1fr;
+  }
+  .stall-buttons-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .team-progress-info {
+    grid-template-columns: 1fr 1fr;
+  }
+  .form-fields-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media(max-width: 600px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  .admin-content {
+    padding: 20px;
+  }
+  .stall-buttons-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

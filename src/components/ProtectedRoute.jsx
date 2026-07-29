@@ -2,25 +2,29 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute({ children, adminOnly = false }) {
+    const { user, adminData, teamData, loading } = useAuth();
 
-    const { user, adminData, loading } = useAuth();
-
-    // Wait until authentication check is complete
     if (loading) {
-        return <h2>Loading...</h2>;
+        return (
+            <div className="dashboard-loading-screen">
+                <div className="spinner"></div>
+                <h2>Verifying permissions...</h2>
+            </div>
+        );
     }
 
-    // User is not logged in
     if (!user) {
         return <Navigate to="/" replace />;
     }
 
-    // someone is logged in but is not an admin.
     if (adminOnly && !adminData) {
         return <Navigate to="/participant" replace />;
     }
 
-    // User is allowed to access the page
+    if (!adminOnly && !teamData && !adminData) {
+        return <Navigate to="/no-team" replace />;
+    }
+
     return children;
 }
 
