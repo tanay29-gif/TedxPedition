@@ -2,11 +2,15 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function HomeRedirect() {
-
-    const { user, adminData, loading } = useAuth();
+    const { user, adminData, teamData, loading } = useAuth();
 
     if (loading) {
-        return <h2>Loading...</h2>;
+        return (
+            <div className="dashboard-loading-screen">
+                <div className="spinner"></div>
+                <h2>Loading credentials...</h2>
+            </div>
+        );
     }
 
     if (!user) {
@@ -17,7 +21,12 @@ function HomeRedirect() {
         return <Navigate to="/admin" replace />;
     }
 
-    return <Navigate to="/participant" replace />;
+    if (teamData) {
+        return <Navigate to="/participant" replace />;
+    }
+
+    // No admin role and no registered team found
+    return <Navigate to="/no-team" replace />;
 }
 
 export default HomeRedirect;
