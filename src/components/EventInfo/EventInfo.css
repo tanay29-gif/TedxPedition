@@ -1,0 +1,47 @@
+.eventInfo{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:25px;
+
+padding:60px 8%;
+
+background:#111;
+
+}
+
+.infoCard{
+
+background:#1b1b1b;
+
+padding:30px;
+
+border-radius:15px;
+
+border-top:4px solid #e10600;
+
+transition:.3s;
+
+}
+
+.infoCard:hover{
+
+transform:translateY(-8px);
+
+}
+
+.infoCard h3{
+
+margin-bottom:15px;
+
+color:white;
+
+}
+
+.infoCard p{
+
+color:#bbb;
+
+}

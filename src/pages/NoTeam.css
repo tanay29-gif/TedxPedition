@@ -1,0 +1,79 @@
+.noteam-page {
+  min-height: 100vh;
+  background-color: var(--bg-black);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.noteam-header {
+  padding: 20px 8%;
+  background-color: rgba(10, 10, 10, 0.85);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.noteam-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.noteam-header span {
+  color: var(--primary-red);
+}
+
+/* Content */
+.noteam-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.noteam-card {
+  width: 100%;
+  max-width: 480px;
+  background-color: rgba(20, 20, 20, 0.85);
+  border-color: var(--border-color);
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.noteam-icon {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 0 10px var(--primary-red-glow));
+}
+
+.noteam-card h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.noteam-card p {
+  color: var(--text-grey);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.noteam-instruction-box {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: 12px;
+  width: 100%;
+}
+
+.noteam-instruction-box p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 14px;
+}

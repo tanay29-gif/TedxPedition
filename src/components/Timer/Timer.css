@@ -1,0 +1,47 @@
+.stall-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-white);
+  transition: var(--transition-normal);
+}
+
+.stall-timer.active {
+  border-color: var(--primary-red);
+  color: var(--primary-red);
+  background-color: rgba(225, 6, 0, 0.05);
+  box-shadow: 0 0 10px rgba(225, 6, 0, 0.15);
+  animation: timerPulse 2s infinite;
+}
+
+.timer-icon {
+  font-size: 1rem;
+}
+
+.stall-timer.active .timer-icon {
+  animation: timerRotate 2s linear infinite;
+}
+
+.timer-digits {
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+}
+
+@keyframes timerPulse {
+  0% { box-shadow: 0 0 5px rgba(225, 6, 0, 0.1); }
+  50% { box-shadow: 0 0 15px rgba(225, 6, 0, 0.3); }
+  100% { box-shadow: 0 0 5px rgba(225, 6, 0, 0.1); }
+}
+
+@keyframes timerRotate {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
+  100% { transform: rotate(360deg); }
+}
