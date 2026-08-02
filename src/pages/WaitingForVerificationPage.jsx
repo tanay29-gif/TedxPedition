@@ -1,5 +1,6 @@
 import QRCode from "react-qr-code";
 import Timer from "../components/Timer/Timer";
+import { stallIdToMission } from "../utils/missionUtils";
 import "./WaitingForVerificationPage.css";
 
 export default function WaitingForVerificationPage({ team, stallNum, stallProgress, handleLogout }) {
@@ -25,11 +26,11 @@ export default function WaitingForVerificationPage({ team, stallNum, stallProgre
             <span className="wait-icon">📋</span>
           </div>
 
-          <h2>Stall {stallNum} Finished!</h2>
+          <h2>{stallIdToMission(stallNum)} Finished!</h2>
           <h3>Waiting for Admin Verification</h3>
 
           <div className="time-summary-box">
-            <p>Your completion duration for this stall:</p>
+            <p>Your completion duration for this mission:</p>
             <Timer startedAt={stallProgress?.startedAt} endedAt={stallProgress?.endedAt} className="large-timer" />
           </div>
 

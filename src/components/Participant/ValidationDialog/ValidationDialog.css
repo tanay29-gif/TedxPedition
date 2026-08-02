@@ -1,0 +1,173 @@
+.validation-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.validation-dialog-card {
+  width: 90%;
+  max-width: 400px;
+  background-color: #171717;
+  border-radius: 24px;
+  padding: 35px 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+.validation-dialog-card.glow-green {
+  border: 2px solid #10b981;
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+}
+
+.validation-dialog-card.glow-red {
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+}
+
+.validation-dialog-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90px;
+}
+
+.validation-dialog-icon {
+  font-size: 4.5rem;
+  line-height: 1;
+}
+
+.validation-dialog-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.glow-green .validation-dialog-title {
+  color: #10b981;
+  text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.glow-red .validation-dialog-title {
+  color: #ef4444;
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.validation-dialog-message {
+  width: 100%;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.validation-dialog-message p {
+  margin: 0 0 12px 0;
+}
+
+.validation-dialog-message p:last-of-type {
+  margin: 0;
+}
+
+.success-text {
+  font-size: 1.2rem;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.scanned-info-box {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.info-detail {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.highlight-wrong {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.highlight-right {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.instruction-text {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin-top: 10px;
+}
+
+.validation-dialog-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-pulse-green {
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); text-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
+  100% { transform: scale(1); }
+}
