@@ -10,9 +10,10 @@ const adminCollection = "admin_users";
 /**
  * Get admin details by Firebase UID.
  */
-export const getAdminByUID = async (uid) => {
+export const getAdmin = async (uid) => {
 
     try {
+        console.log("Searching admin with UID:", uid);
 
         const adminRef = doc(db, adminCollection, uid);
 
@@ -23,6 +24,7 @@ export const getAdminByUID = async (uid) => {
             return null;
 
         }
+        console.log("Admin data:", snapshot.data());
 
         return {
 

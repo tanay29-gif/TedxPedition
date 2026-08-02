@@ -8,9 +8,11 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../../firebase/firebase";
+import { getStallKey, getStallNumber, getStallProgressValue } from "./stallKeys";
 
 const stallsCollection = "stalls";
 
+export { getStallKey, getStallNumber, getStallProgressValue };
 
 /**
  * Returns all stalls ordered by their sequence.

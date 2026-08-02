@@ -1,0 +1,12 @@
+{
+    "stallId": "STALL02",
+    "title": "Word Challenge",
+    "type": "word",
+    "description": "Type the word exactly as shown.",
+    "question": "TEDX",
+    "answer": "TEDX",
+    "maxScore": 100,
+    "timeLimit": 300,
+    "successMessage": "Correct!",
+    "failureMessage": "Incorrect Word."
+}

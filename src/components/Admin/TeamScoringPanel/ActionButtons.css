@@ -1,0 +1,75 @@
+.action-buttons{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:18px;
+
+    margin-top:35px;
+
+}
+
+.cancel-btn{
+
+    background:transparent;
+
+    border:2px solid #444;
+
+    color:white;
+
+    padding:14px 28px;
+
+    border-radius:14px;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.cancel-btn:hover{
+
+    border-color:#888;
+
+}
+
+.verify-btn{
+
+    background:#E10600;
+
+    color:white;
+
+    border:none;
+
+    padding:14px 34px;
+
+    border-radius:14px;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.verify-btn:hover:not(:disabled){
+
+    background:#ff2b23;
+
+    transform:translateY(-2px);
+
+}
+
+.verify-btn:disabled{
+
+    opacity:.55;
+
+    cursor:not-allowed;
+
+}

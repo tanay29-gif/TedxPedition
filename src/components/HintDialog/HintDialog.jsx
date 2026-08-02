@@ -7,9 +7,11 @@ export default function HintDialog({ isOpen, coins, onConfirm, onClose }) {
 
   return (
     <div className="hint-dialog-overlay">
-      <div className="hint-dialog-modal glass-card glow-red">
+      <div className="hint-dialog-modal ">
         <div className="hint-dialog-header">
-          <h3>💡 Request Hint Clue</h3>
+          <h3>
+    💡 Request Hint Clue
+</h3>
           <button className="hint-close-x" onClick={onClose}>&times;</button>
         </div>
 

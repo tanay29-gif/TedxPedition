@@ -1,0 +1,109 @@
+.timer-card{
+
+    background:#171717;
+
+    border-radius:20px;
+
+    padding:28px;
+
+    color:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:25px;
+
+}
+
+.timer-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+}
+
+.timer-header h2{
+
+    margin:0;
+
+    font-size:1.4rem;
+
+}
+
+.timer-header p{
+
+    margin-top:8px;
+
+    color:#9ca3af;
+
+}
+
+.timer-status{
+
+    padding:8px 16px;
+
+    border-radius:20px;
+
+    font-size:.8rem;
+
+    font-weight:700;
+
+}
+
+.timer-status.playing{
+
+    background:#14532d;
+
+    color:#4ade80;
+
+}
+
+.timer-status.waiting{
+
+    background:#374151;
+
+    color:white;
+
+}
+
+.timer-status.verifying{
+
+    background:#78350f;
+
+    color:#fbbf24;
+
+}
+
+.timer-status.finished{
+
+    background:#0f172a;
+
+    color:#38bdf8;
+
+}
+
+.timer-display{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:3rem;
+
+    font-weight:700;
+
+    padding:30px;
+
+    border-radius:18px;
+
+    background:#111111;
+
+    border:1px solid rgba(255,255,255,.05);
+
+}

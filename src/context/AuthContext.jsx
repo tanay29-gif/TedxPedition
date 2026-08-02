@@ -6,7 +6,7 @@ import {
 } from "react";
 
 import { authListener } from "../services/auth";
-import { getAdmin } from "../services/firestore";
+import { getAdmin } from "../services/firestore/admin";
 import { getTeamByLeaderEmail } from "../services/firestore/teams";
 
 // Create Context
@@ -25,6 +25,8 @@ export function AuthProvider({ children }) {
                 setUser(firebaseUser);
                 try {
                     // 1. Check if admin
+                    console.log("Firebase UID:", firebaseUser.uid);
+                    console.log("Email:", firebaseUser.email);
                     const admin = await getAdmin(firebaseUser.uid);
                     setAdminData(admin);
 

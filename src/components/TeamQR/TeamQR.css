@@ -1,0 +1,59 @@
+.qr-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+}
+
+.qr-card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+
+    width: 380px;
+    max-width: 90%;
+
+    text-align: center;
+
+    position: relative;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+
+.close-btn {
+    position: absolute;
+
+    top: 15px;
+    right: 15px;
+
+    border: none;
+    background: transparent;
+
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.qr-card h2{
+    margin-bottom:20px;
+}
+
+.qr-card h3{
+    margin-top:20px;
+    margin-bottom:8px;
+}
+
+.qr-card p{
+    color:#666;
+    font-weight:bold;
+}
+
+.qr-card small{
+    display:block;
+    margin-top:20px;
+    color:#888;
+}

@@ -1,0 +1,126 @@
+.team-qr-card{
+
+    background:#171717;
+
+    border-radius:20px;
+
+    padding:28px;
+
+    color:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.qr-header{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+}
+
+.qr-header h2{
+
+    margin:0;
+
+    font-size:1.4rem;
+
+}
+
+.qr-header p{
+
+    margin-top:8px;
+
+    color:#9ca3af;
+
+    max-width:300px;
+
+}
+
+.qr-status{
+
+    padding:8px 16px;
+
+    border-radius:20px;
+
+    font-size:.8rem;
+
+    font-weight:700;
+
+}
+
+.qr-status.playing{
+
+    background:#14532d;
+
+    color:#4ade80;
+
+}
+
+.qr-status.verifying{
+
+    background:#78350f;
+
+    color:#fbbf24;
+
+}
+
+.qr-status.finished{
+
+    background:#1d4ed8;
+
+    color:white;
+
+}
+
+.qr-container{
+
+    background:white;
+
+    padding:18px;
+
+    border-radius:18px;
+
+}
+
+.team-qr-card h3{
+
+    margin:0;
+
+    font-size:1.4rem;
+
+}
+
+.team-qr-card small{
+
+    color:#9ca3af;
+
+}
+
+.team-qr-btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:#E10600;
+    color:white;
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.team-qr-btn:hover{
+    background:#ff2b23;
+}

@@ -1,0 +1,19 @@
+{
+    "stallId": "STALL03",
+
+    "title": "Offline Challenge",
+
+    "type": "offline",
+
+    "description": "Complete the offline activity assigned by the stall admin.",
+
+    "instruction": "Complete the activity and press Finish Challenge.",
+
+    "maxScore": 100,
+
+    "timeLimit": 300,
+
+    "successMessage": "Challenge Completed!",
+
+    "failureMessage": ""
+}
