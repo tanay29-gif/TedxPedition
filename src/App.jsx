@@ -1,16 +1,26 @@
 import { Route, Routes } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import HomeRedirect from "./pages/HomeRedirect";
-import ParticipantDashboard from "./pages/ParticipantDashboard";
-import SignIn from "./pages/SignIn";
+import LandingPage from "./pages/LandingPage";
 import Leaderboard from "./pages/Leaderboard";
 import NoTeam from "./pages/NoTeam";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ParticipantDashboard from "./pages/ParticipantDashboard";
+import SignIn from "./pages/SignIn";
+import SuperAdminDashboard from './pages/SuperAdminDashboard.jsx';
+
 
 function App() {
   return (
+
+    
     <Routes>
+      //later we will add protected routes for the super admin dsshboard 
+
+      <Route
+  path="/super-admin"
+  element={<SuperAdminDashboard />}
+/>
       {/* Public Landing Page */}
       <Route path="/home" element={<LandingPage />} />
 
