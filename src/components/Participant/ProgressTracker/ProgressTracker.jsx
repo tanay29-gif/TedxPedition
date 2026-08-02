@@ -1,3 +1,4 @@
+import { stallIdToMission } from "../../../utils/missionUtils";
 import "./ProgressTracker.css";
 
 const stalls = [
@@ -83,7 +84,7 @@ export default function ProgressTracker({
 
                                 <span>
 
-                                    {stall}
+                                    {stallIdToMission(stall)}
 
                                 </span>
 

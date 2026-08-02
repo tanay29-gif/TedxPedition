@@ -5,11 +5,12 @@ import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase/firebase";
 import { logout } from "../services/auth";
 import { getHint } from "../services/firestore/hints";
-import { markHintUsed, startStall } from "../services/firestore/progress";
+import { markHintUsed } from "../services/firestore/progress";
 import { getStallKey, getStallNumber, getStallProgressValue } from "../services/firestore/stallKeys";
 import { getStallByOrder } from "../services/firestore/stalls";
 import { getTeamByLeaderEmail, updateTeam } from "../services/firestore/teams";
-import { updateActiveTeam } from "../services/realtime/activeTeams";
+import { loadClue } from "../services/clues/clueLoader";
+import { validateScannedStall, startMission, finishMission } from "../services/stalls/stallService";
 
 import HintDialog from "../components/HintDialog/HintDialog";
 import CurrentStallCard from "../components/Participant/CurrentStallCard/CurrentStallCard";
@@ -20,6 +21,7 @@ import TeamQRCodeCard from "../components/Participant/TeamQRCodeCard/TeamQRCodeC
 import TimeCard from "../components/Participant/TimeCard/TimeCard";
 import QRScanner from "../components/QRScanner/QRScanner";
 import TeamQR from "../components/TeamQR/TeamQR";
+import ValidationDialog from "../components/Participant/ValidationDialog/ValidationDialog";
 import ChallengePage from "./ChallengePage";
 import FinalLocation from "./FinalLocation";
 import FinishPage from "./FinishPage";
@@ -34,6 +36,8 @@ export default function ParticipantDashboard() {
   const [team, setTeam] = useState(null);
   const [progress, setProgress] = useState(null);
   const [currentStallMeta, setCurrentStallMeta] = useState(null);
+  const [currentClue, setCurrentClue] = useState(null);
+  const [validationResult, setValidationResult] = useState(null);
   const [hintText, setHintText] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -91,7 +95,7 @@ export default function ParticipantDashboard() {
     };
   }, [user]);
 
-  // Load Stall Metadata when currentStall changes
+  // Load Stall Metadata & Clue when currentStall changes
   useEffect(() => {
     const currentStallNum = getStallNumber(team?.currentStall);
     if (!currentStallNum) return;
@@ -101,15 +105,20 @@ export default function ParticipantDashboard() {
         const stallMeta = await getStallByOrder(currentStallNum);
         setCurrentStallMeta(stallMeta);
 
+        // Fetch clue data
+        const stallKey = getStallKey(currentStallNum);
+        const clueData = await loadClue(stallKey);
+        setCurrentClue(clueData);
+
         const stallProg = getStallProgressValue(progress, currentStallNum);
         if (stallProg?.hintUsed) {
           const hintDoc = await getHint(getStallKey(currentStallNum));
-          setHintText(hintDoc?.hint || `Hint for Stall ${currentStallNum}`);
+          setHintText(hintDoc?.hintText || `Hint for Stall ${currentStallNum}`);
         } else {
           setHintText("");
         }
       } catch (err) {
-        console.error("Error fetching stall metadata:", err);
+        console.error("Error fetching stall metadata or clue:", err);
       }
     };
 
@@ -125,28 +134,46 @@ export default function ParticipantDashboard() {
   const handleStallQRScan = async (scannedCode) => {
     setErrorMsg("");
 
-    const expectedStallNum = getStallNumber(team?.currentStall);
-    const scannedStallNum = getStallNumber(scannedCode);
+    const expectedStallId = team?.currentStall || "STALL01";
+    const validation = validateScannedStall(scannedCode, expectedStallId);
 
-    if (!expectedStallNum || !scannedStallNum || scannedStallNum !== expectedStallNum) {
-      setErrorMsg(`Invalid Stall QR code. Your current assigned stall is Stall ${expectedStallNum ?? team?.currentStall}.`);
-      return;
-    }
+    setValidationResult(validation);
 
-    try {
-      // 1. Record start in Firestore progress
-      await startStall(team.id, expectedStallNum);
-
-      // 2. Set activeTeam status to PLAYING in Realtime Database
-      await updateActiveTeam(team.id, {
-        currentStall: getStallKey(expectedStallNum),
-        status: "PLAYING"
-      });
-
+    if (validation.valid) {
+      // Correct QR Code - Close scanner first, show correct screen, wait, then trigger startMission
       setIsScannerOpen(false);
+      setTimeout(async () => {
+        try {
+          const expectedStallNum = getStallNumber(expectedStallId);
+          await startMission(team.id, expectedStallNum);
+          setValidationResult(null);
+        } catch (err) {
+          console.error("Failed to start mission:", err);
+          setErrorMsg("Error starting challenge in database. Please retry.");
+          setValidationResult(null);
+        }
+      }, 1500);
+    } else {
+      // Wrong QR Code - Close scanner to stop camera and display the ValidationDialog
+      setIsScannerOpen(false);
+    }
+  };
+
+  const handleCloseValidationDialog = () => {
+    const wasWrong = validationResult && !validationResult.valid;
+    setValidationResult(null);
+    if (wasWrong) {
+      setIsScannerOpen(true);
+    }
+  };
+
+  const handleChallengeComplete = async () => {
+    try {
+      const currentStallNum = getStallNumber(team.currentStall);
+      await finishMission(team.id, currentStallNum);
     } catch (err) {
-      console.error("Failed to start stall:", err);
-      setErrorMsg("Error initiating stall in database. Please retry.");
+      console.error("Failed to complete challenge:", err);
+      alert("Failed to submit challenge. Please try again.");
     }
   };
 
@@ -165,7 +192,7 @@ export default function ParticipantDashboard() {
 
       // 3. Fetch hint content
       const hintDoc = await getHint(getStallKey(team.currentStall));
-      const text = hintDoc?.hint || `Solve the clue at the stall to move forward!`;
+      const text = hintDoc?.hintText || `Solve the clue at the stall to move forward!`;
       setHintText(text);
       setIsHintOpen(false);
     } catch (err) {
@@ -235,6 +262,7 @@ export default function ParticipantDashboard() {
         stallMeta={currentStallMeta}
         hintText={hintText}
         onUseHintClick={() => setIsHintOpen(true)}
+        onComplete={handleChallengeComplete}
         handleLogout={handleLogout}
       />
     );
@@ -272,10 +300,9 @@ export default function ParticipantDashboard() {
             loading={false}
           />
           <CurrentStallCard
-            currentStall={team.currentStall}
+            clue={currentClue}
             status={statusLabel}
             onScanQR={() => setIsScannerOpen(true)}
-            gameStarted={currentStallStatus === "PLAYING"}
           />
         </section>
 
@@ -305,8 +332,8 @@ export default function ParticipantDashboard() {
       {/* Dialog Modals */}
       {isScannerOpen && (
         <QRScanner
-          title={`Scan Stall ${currentStallNum} QR`}
-          placeholder={`Enter Stall Code (e.g. ${getStallKey(currentStallNum)})`}
+          title="Scan Stall QR"
+          placeholder="Enter code manually..."
           onScanSuccess={handleStallQRScan}
           onClose={() => {
             setIsScannerOpen(false);
@@ -315,18 +342,23 @@ export default function ParticipantDashboard() {
         />
       )}
       {isTeamQROpen && (
-    <TeamQR
-        team={team}
-        onClose={() => setIsTeamQROpen(false)}
-    />
-)}
-
+        <TeamQR
+            team={team}
+            onClose={() => setIsTeamQROpen(false)}
+        />
+      )}
 
       <HintDialog
         isOpen={isHintOpen}
         coins={team.coins}
         onConfirm={handleUseHintConfirm}
         onClose={() => setIsHintOpen(false)}
+      />
+
+      <ValidationDialog
+        isOpen={validationResult !== null}
+        result={validationResult}
+        onClose={handleCloseValidationDialog}
       />
     </div>
   );

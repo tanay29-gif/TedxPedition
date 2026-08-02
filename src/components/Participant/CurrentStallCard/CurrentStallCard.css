@@ -170,3 +170,17 @@
     margin-top:10px;
 
 }
+
+.clue-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.clue-description {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #d1d5db;
+    line-height: 1.5;
+}

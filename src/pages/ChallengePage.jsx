@@ -2,10 +2,9 @@ import { useState } from "react";
 import QRScanner from "../components/QRScanner/QRScanner";
 import Timer from "../components/Timer/Timer";
 import GameContainer from "../components/game/GameContainer";
-import { finishStall } from "../services/firestore/progress";
 import { getStallKey } from "../services/firestore/stallKeys";
 import { getQRWord } from "../services/firestore/qr";
-import { updateActiveTeam } from "../services/realtime/activeTeams";
+import { stallIdToMission } from "../utils/missionUtils";
 import "./ChallengePage.css";
 
 export default function ChallengePage({
@@ -15,6 +14,7 @@ export default function ChallengePage({
   stallMeta,
   hintText,
   onUseHintClick,
+  onComplete,
   handleLogout
 }) {
   const [error, setError] = useState("");
@@ -46,34 +46,45 @@ export default function ChallengePage({
   // --- QR Words Puzzle Engine ---
   const handleQRScanSuccess = async (scannedCode) => {
     setError("");
-    let code = scannedCode.trim().toUpperCase();
+    let rawCode = scannedCode.trim();
 
-    // Check if URL scanned, parse query params or path
-    // Format could be: TALK1, TALK2 or TALK1:ideas or full URL containing TALK1
-    let talkId = "";
-    let word = "";
-
-    const talkMatch = code.match(/TALK([1-6])/);
-    if (talkMatch) {
-      talkId = `TALK${talkMatch[1]}`;
+    // 1. Try parsing JSON to extract qrId
+    let qrId = rawCode;
+    try {
+      const parsed = JSON.parse(rawCode);
+      if (parsed && typeof parsed === "object" && parsed.hasOwnProperty("qrId")) {
+        qrId = String(parsed.qrId).trim();
+      }
+    } catch (e) {
+      // Not a JSON string
     }
 
-    if (!talkId) {
-      setError("Invalid Talk QR Code. It must correspond to one of the 6 TED Talks.");
+    // 2. Extract QR number (QR1 to QR6, or QR001 to QR006)
+    const qrMatch = qrId.toUpperCase().match(/QR0?([1-6])/);
+    if (!qrMatch) {
+      setError("Invalid Talk QR Code. It must correspond to one of the 6 QR banners.");
       return;
     }
 
-    // Attempt to parse word if included in QR, otherwise fetch from db / fallback
-    if (code.includes(":") || code.includes("=")) {
-      const parts = code.split(/[:=]/);
-      word = parts[parts.length - 1].toLowerCase();
-    } else {
-      try {
-        const qrData = await getQRWord(talkId);
-        word = qrData?.word?.toLowerCase() || talkFallbackWords[talkId];
-      } catch {
-        word = talkFallbackWords[talkId];
+    const orderNum = parseInt(qrMatch[1], 10);
+    const normalizedQrId = `QR${String(orderNum).padStart(3, "0")}`; // e.g. "QR001"
+
+    let talkId = `TALK${orderNum}`; // default fallback mapping
+    let word = talkFallbackWords[talkId];
+
+    try {
+      // Fetch QR Word document using canonical ID (e.g. "QR001")
+      const qrData = await getQRWord(normalizedQrId);
+      if (qrData) {
+        if (qrData.talkId) {
+          talkId = qrData.talkId;
+        }
+        if (qrData.word) {
+          word = qrData.word.toLowerCase();
+        }
       }
+    } catch (err) {
+      console.error("Failed to load QR word from DB, using fallback:", err);
     }
 
     setQrWords(prev => ({
@@ -118,17 +129,12 @@ export default function ChallengePage({
   // --- Common Submit ---
   const handleFinishStall = async () => {
     try {
-      // 1. Mark endedAt in progress
-      await finishStall(team.id, stallNum);
-
-      // 2. Set activeTeam status to VERIFYING in RTDB
-      await updateActiveTeam(team.id, {
-        currentStall: stallNum,
-        status: "VERIFYING"
-      });
+      if (onComplete) {
+        await onComplete();
+      }
     } catch (err) {
-      console.error("Failed to submit stall:", err);
-      alert("Error submitting stall. Please try again.");
+      console.error("Failed to submit mission:", err);
+      setError("Error submitting mission. Please try again.");
     }
   };
 
@@ -136,8 +142,8 @@ export default function ChallengePage({
     <div className="challenge-page">
       <header className="challenge-header">
         <div className="header-info">
-          <span className="badge">STALL {stallNum} ACTIVE</span>
-          <h2>{stallMeta?.name || `Stall ${stallNum} Challenge`}</h2>
+          <span className="badge">{stallIdToMission(stallNum).toUpperCase()} ACTIVE</span>
+          <h2>{stallMeta?.name || `${stallIdToMission(stallNum)} Challenge`}</h2>
         </div>
         <div className="header-status">
           <Timer startedAt={stallProgress?.startedAt} />
@@ -272,18 +278,18 @@ export default function ChallengePage({
                 <h3>🎉 Challenge Solved!</h3>
                 <p>Your solution has been successfully validated by the system. Stop the timer and submit to notify the administrator.</p>
                 <button onClick={handleFinishStall} className="btn btn-primary submit-final-btn">
-                  Submit & Finish Stall
+                  Submit & Finish Mission
                 </button>
               </div>
             )}
 
             <div className="glass-card clue-panel">
-              <h4>Stall Clue</h4>
-              <p>{stallMeta?.description || `Stall ${stallNum} active task. Complete it to unlock the next destination.`}</p>
+              <h4>Mission Clue</h4>
+              <p>{stallMeta?.description || `${stallIdToMission(stallNum)} active task. Complete it to unlock the next destination.`}</p>
             </div>
 
             <div className="glass-card hint-panel">
-              <h4>Stall Hint</h4>
+              <h4>Mission Hint</h4>
               {hintText ? (
                 <div className="hint-revealed">
                   <span className="hint-revealed-icon font-mono">💡 Revealed Clue:</span>
@@ -291,7 +297,7 @@ export default function ChallengePage({
                 </div>
               ) : (
                 <div className="hint-request">
-                  <p>Stuck on this stall? Use a Hint Coin to unlock a clue.</p>
+                  <p>Stuck on this mission? Use a Hint Coin to unlock a clue.</p>
                   <button onClick={onUseHintClick} className="btn btn-accent btn-sm hint-btn">
                     💡 Spend Hint Coin
                   </button>
