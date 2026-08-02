@@ -11,6 +11,7 @@ import { updateActiveTeam } from "../services/realtime/activeTeams";
 import { getHint } from "../services/firestore/hints";
 import { updateTeam } from "../services/firestore/teams";
 
+
 import Timer from "../components/Timer/Timer";
 import HintDialog from "../components/HintDialog/HintDialog";
 import QRScanner from "../components/QRScanner/QRScanner";

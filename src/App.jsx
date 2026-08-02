@@ -7,6 +7,7 @@ import SignIn from "./pages/SignIn";
 import Leaderboard from "./pages/Leaderboard";
 import NoTeam from "./pages/NoTeam";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { seedTreasureHunt, seedRealtimeDatabase } from "./FullSeeding";
 
 function App() {
   return (
@@ -48,8 +49,14 @@ function App() {
 
       {/* Fallback route back to root */}
       <Route path="*" element={<HomeRedirect />} />
-    </Routes>
+      <Route path="/seed" element={
+        <div>
+          <button onClick={seedTreasureHunt}>Seed Team Progress</button>
+          <button onClick={seedRealtimeDatabase}>Seed Realtime Database</button>
+          </div>
+    }/>
+        </Routes>
   );
 }
 
-export default App;
+      export default App;
