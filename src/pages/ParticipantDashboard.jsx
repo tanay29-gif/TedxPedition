@@ -11,6 +11,7 @@ import { getStallByOrder } from "../services/firestore/stalls";
 import { getTeamByLeaderEmail, updateTeam } from "../services/firestore/teams";
 import { loadClue } from "../services/clues/clueLoader";
 import { validateScannedStall, startMission, finishMission } from "../services/stalls/stallService";
+import { subscribeEventStatus } from "../services/event/eventService";
 
 import HintDialog from "../components/HintDialog/HintDialog";
 import CurrentStallCard from "../components/Participant/CurrentStallCard/CurrentStallCard";
@@ -46,6 +47,14 @@ export default function ParticipantDashboard() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isHintOpen, setIsHintOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [eventState, setEventState] = useState(null);
+
+  useEffect(() => {
+    const unsubscribeEvent = subscribeEventStatus((statusData) => {
+      setEventState(statusData);
+    });
+    return () => unsubscribeEvent();
+  }, []);
 
   // Load team profile and start listening for real-time changes
   useEffect(() => {
@@ -219,6 +228,56 @@ export default function ParticipantDashboard() {
         <button onClick={handleLogout} className="btn btn-primary">
           Log Out
         </button>
+      </div>
+    );
+  }
+
+  if (!eventState) {
+    return (
+      <div className="dashboard-loading-screen">
+        <div className="spinner"></div>
+        <h2>Syncing event status...</h2>
+      </div>
+    );
+  }
+
+  if (eventState.status === "READY") {
+    return (
+      <div className="dashboard-loading-screen event-state-screen ready-state" style={{ textAlign: 'center', gap: '30px' }}>
+        <div className="tedx-brand-glow" style={{ fontSize: '3rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>
+          TED<span style={{ color: 'var(--primary-red)' }}>X</span>pedition
+        </div>
+        <div className="spinner" style={{ borderColor: 'var(--primary-red) transparent transparent transparent' }}></div>
+        <h2 style={{ color: 'var(--text-white)' }}>Waiting for Event Start</h2>
+        <p style={{ color: 'var(--text-grey)', maxWidth: '400px', margin: '0 auto', fontSize: '1.1rem' }}>
+          The hunt hasn't started yet. Please wait for the coordinators to launch the event.
+        </p>
+        <button onClick={handleLogout} className="btn btn-accent logout-btn" style={{ marginTop: '20px', padding: '10px 24px', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-white)' }}>
+          Log Out
+        </button>
+      </div>
+    );
+  }
+
+  if (eventState.status === "ENDED") {
+    return (
+      <div className="dashboard-loading-screen event-state-screen ended-state" style={{ textAlign: 'center', gap: '30px' }}>
+        <div className="tedx-brand-glow" style={{ fontSize: '3rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>
+          TED<span style={{ color: 'var(--primary-red)' }}>X</span>pedition
+        </div>
+        <div style={{ fontSize: '4rem' }}>🏁</div>
+        <h2 style={{ color: 'var(--primary-red)', fontSize: '2.5rem', fontWeight: '800' }}>Event Finished</h2>
+        <p style={{ color: 'var(--text-grey)', maxWidth: '500px', margin: '0 auto', fontSize: '1.2rem', lineHeight: '1.6' }}>
+          TEDxpedition has officially concluded. Thank you for scanning, solving, and participating!
+        </p>
+        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
+          <Link to="/leaderboard" className="btn btn-secondary leaderboard-btn" style={{ padding: '12px 24px', backgroundColor: 'var(--primary-red)', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold' }}>
+            📊 View Leaderboard
+          </Link>
+          <button onClick={handleLogout} className="btn btn-accent logout-btn" style={{ padding: '12px 24px', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-white)' }}>
+            Log Out
+          </button>
+        </div>
       </div>
     );
   }

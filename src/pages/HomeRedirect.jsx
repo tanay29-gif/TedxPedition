@@ -18,6 +18,9 @@ function HomeRedirect() {
     }
 
     if (adminData) {
+        if (adminData.role === "Super Admin") {
+            return <Navigate to="/super-admin" replace />;
+        }
         return <Navigate to="/admin" replace />;
     }
 
