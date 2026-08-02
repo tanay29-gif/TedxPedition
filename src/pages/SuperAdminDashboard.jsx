@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
-import { db } from '../firebase/firebase.js'; 
+import { createAdmin, updateAdmin, disableAdmin, subscribeAdmins } from '../services/admin/adminService.js';
+import { startEvent, endEvent, subscribeEventStatus } from '../services/event/eventService.js';
 import './SuperAdminDashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -9,28 +9,26 @@ const SuperAdminDashboard = () => {
 
   // Add Admin State
   const [newAdminName, setNewAdminName] = useState("");
-  const [newAdminRole, setNewAdminRole] = useState("Stall Admin");
-  const [newAdminStall, setNewAdminStall] = useState("");
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminRole, setNewAdminRole] = useState("stall_admin");
+  const [newAdminStall, setNewAdminStall] = useState("1");
 
   // Edit Admin State
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState("Stall Admin");
-  const [editStall, setEditStall] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState("stall_admin");
+  const [editStall, setEditStall] = useState("1");
 
   useEffect(() => {
-    // 1. LIVE Listen to Admins
-    const unsubscribeAdmins = onSnapshot(collection(db, "admin_users"), (snapshot) => {
-      setAdmins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    // 1. LIVE Listen to Admins using service subscription helper
+    const unsubscribeAdmins = subscribeAdmins((adminsList) => {
+      setAdmins(adminsList);
     });
 
-    // 2. LIVE Listen to Global Event Status
-    const unsubscribeEvent = onSnapshot(doc(db, "Events", "global_state"), (docSnap) => {
-      if (docSnap.exists()) {
-        setEventStatus(docSnap.data().status);
-      } else {
-        setEventStatus("offline");
-      }
+    // 2. LIVE Listen to Global Event Status using service subscription helper
+    const unsubscribeEvent = subscribeEventStatus((statusData) => {
+      setEventStatus(statusData?.status || "offline");
     });
 
     return () => {
@@ -40,66 +38,107 @@ const SuperAdminDashboard = () => {
   }, []);
 
   // --- EVENT CONTROLS ---
-  const updateEventStatus = async (newStatus) => {
-    if (newStatus === 'ended') {
-      const isConfirmed = window.confirm(`CRITICAL WARNING: Are you sure you want to END the event?`);
-      if (!isConfirmed) return;
+  const handleStartEvent = async () => {
+    try {
+      await startEvent();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start event: " + err.message);
     }
+  };
 
-    await setDoc(doc(db, "Events", "global_state"), {
-      status: newStatus,
-      updatedAt: new Date().toISOString()
-    });
+  const handleEndEvent = async () => {
+    const isConfirmed = window.confirm(`CRITICAL WARNING: Are you sure you want to END the event?`);
+    if (!isConfirmed) return;
+    try {
+      await endEvent();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to end event: " + err.message);
+    }
   };
 
   // --- ADMIN MANAGEMENT ---
   const handleAddAdmin = async (e) => {
     e.preventDefault();
-    if (!newAdminName) return;
-    if (newAdminRole === "Stall Admin" && !newAdminStall) return;
+    if (!newAdminName || !newAdminEmail) return;
+    if (newAdminRole === "stall_admin" && !newAdminStall) return;
 
-    await addDoc(collection(db, "admin_users"), {
+    const res = await createAdmin({
       name: newAdminName,
+      email: newAdminEmail,
       role: newAdminRole,
-      stallAssigned: newAdminRole === "Super Admin" ? "All" : parseInt(newAdminStall)
+      stallAssigned: newAdminRole === "super_admin" ? "All" : newAdminStall
     });
 
-    setNewAdminName("");
-    setNewAdminStall("");
-    setNewAdminRole("Stall Admin");
+    if (res.success) {
+      setNewAdminName("");
+      setNewAdminEmail("");
+      setNewAdminStall("1");
+      setNewAdminRole("stall_admin");
+    } else {
+      alert(res.message);
+    }
   };
 
-  const handleDeleteAdmin = async (adminId, adminName) => {
+  const handleDisableAdmin = async (email, adminName) => {
     const isConfirmed = window.confirm(`Remove access for ${adminName}?`);
     if (!isConfirmed) return;
-    await deleteDoc(doc(db, "admin_users", adminId));
+    
+    const res = await disableAdmin(email);
+    if (!res.success) {
+      alert(res.message);
+    }
   };
 
   // --- EDIT ADMIN LOGIC ---
   const openEditModal = (admin) => {
     setEditingAdmin(admin);
     setEditName(admin.name);
-    setEditRole(admin.role || "Stall Admin");
-    setEditStall(admin.stallAssigned === "All" ? "" : admin.stallAssigned);
+    setEditEmail(admin.email || admin.id);
+    setEditRole(admin.role || "stall_admin");
+    
+    // Parse stall number or string
+    let parsedStall = "1";
+    if (admin.stallAssigned) {
+      const match = String(admin.stallAssigned).match(/STALL0?([1-7])/);
+      if (match) {
+        parsedStall = match[1];
+      }
+    }
+    setEditStall(parsedStall);
   };
 
   const handleUpdateAdmin = async (e) => {
     e.preventDefault();
     if (!editingAdmin) return;
 
-    await updateDoc(doc(db, "admin_users", editingAdmin.id), {
+    const res = await updateAdmin(editingAdmin.email, {
       name: editName,
       role: editRole,
-      stallAssigned: editRole === "Super Admin" ? "All" : parseInt(editStall)
+      stallAssigned: editRole === "super_admin" ? "All" : editStall
     });
     
-    setEditingAdmin(null);
+    if (res.success) {
+      setEditingAdmin(null);
+    } else {
+      alert(res.message);
+    }
   };
 
-  // Sort admins so "Super Admin" always appears at the top of the list
+  // Helper to format stall name in UI
+  const formatStall = (stallVal) => {
+    if (!stallVal) return "None";
+    if (stallVal === "All") return "Full System Access";
+    const match = String(stallVal).match(/STALL0?([1-7])/i);
+    if (match) return `Mission ${Number(match[1])}`;
+    return stallVal;
+  };
+
+  // Sort admins so Super Admins always appear at the top of the list
   const sortedAdmins = [...admins].sort((a, b) => {
-    if (a.role === "Super Admin" && b.role !== "Super Admin") return -1;
-    if (a.role !== "Super Admin" && b.role === "Super Admin") return 1;
+    if (a.role === "super_admin" && b.role !== "super_admin") return -1;
+    if (a.role !== "super_admin" && b.role === "super_admin") return 1;
     return 0;
   });
 
@@ -111,10 +150,23 @@ const SuperAdminDashboard = () => {
         
         {/* EVENT CONTROL PANEL */}
         <div className="dashboard-card" style={{ gridColumn: '1 / -1' }}>
-          <h2 className="card-title">Event Status: <span style={{ textTransform: 'uppercase', color: '#e62b1e' }}>{eventStatus}</span></h2>
+          <h2 className="card-title">
+            Event Status: <span style={{ textTransform: 'uppercase', color: '#e62b1e' }}>{eventStatus}</span>
+          </h2>
           <div className="event-controls">
-            <button className="btn btn-start" onClick={() => updateEventStatus('running')}>Start Event</button>
-            <button className="btn btn-end" onClick={() => updateEventStatus('ended')}>End Event</button>
+            {eventStatus === "loading..." && <span>Loading event status...</span>}
+            {eventStatus === "offline" && <span>Event system offline</span>}
+            {eventStatus === "READY" && (
+              <button className="btn btn-start" onClick={handleStartEvent}>Start Event</button>
+            )}
+            {eventStatus === "RUNNING" && (
+              <button className="btn btn-end" onClick={handleEndEvent}>End Event</button>
+            )}
+            {eventStatus === "ENDED" && (
+              <span style={{ fontWeight: 'bold', color: '#888', textTransform: 'uppercase' }}>
+                Event has Concluded
+              </span>
+            )}
           </div>
         </div>
 
@@ -127,19 +179,62 @@ const SuperAdminDashboard = () => {
             </span>
           </h2>
           
-          <form className="admin-form" onSubmit={handleAddAdmin} style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <input type="text" className="tedx-input" placeholder="Admin Name" value={newAdminName} onChange={(e) => setNewAdminName(e.target.value)} style={{ flex: 1 }}/>
-            
-            <select className="tedx-input" value={newAdminRole} onChange={(e) => setNewAdminRole(e.target.value)} style={{ width: '150px' }}>
-              <option value="Stall Admin">Stall Admin</option>
-              <option value="Super Admin">Super Admin</option>
-            </select>
+          <form className="admin-form" onSubmit={handleAddAdmin}>
+            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Name *</label>
+                <input 
+                  type="text" 
+                  className="tedx-input" 
+                  placeholder="Admin Name" 
+                  value={newAdminName} 
+                  onChange={(e) => setNewAdminName(e.target.value)} 
+                  required 
+                />
+              </div>
+              
+              <div style={{ flex: 1, minWidth: '250px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>IITGN Email *</label>
+                <input 
+                  type="email" 
+                  className="tedx-input" 
+                  placeholder="example@iitgn.ac.in" 
+                  value={newAdminEmail} 
+                  onChange={(e) => setNewAdminEmail(e.target.value)} 
+                  required 
+                />
+              </div>
+              
+              <div style={{ width: '160px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Role *</label>
+                <select 
+                  className="tedx-input" 
+                  value={newAdminRole} 
+                  onChange={(e) => setNewAdminRole(e.target.value)}
+                >
+                  <option value="stall_admin">Stall Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              </div>
 
-            {newAdminRole === "Stall Admin" && (
-              <input type="number" className="tedx-input" placeholder="Stall (1-7)" value={newAdminStall} onChange={(e) => setNewAdminStall(e.target.value)} min="1" max="7" style={{ width: '120px' }}/>
-            )}
-            
-            <button type="submit" className="btn btn-submit">Add User</button>
+              {newAdminRole === "stall_admin" && (
+                <div style={{ width: '120px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Mission *</label>
+                  <input 
+                    type="number" 
+                    className="tedx-input" 
+                    placeholder="1-7" 
+                    value={newAdminStall} 
+                    onChange={(e) => setNewAdminStall(e.target.value)} 
+                    min="1" 
+                    max="7" 
+                    required 
+                  />
+                </div>
+              )}
+              
+              <button type="submit" className="btn btn-submit" style={{ height: '46px' }}>Add User</button>
+            </div>
           </form>
 
           <ul className="data-list" style={{ marginTop: '20px' }}>
@@ -147,17 +242,25 @@ const SuperAdminDashboard = () => {
               <li key={admin.id} className="data-item">
                 <div>
                   <strong>{admin.name}</strong> 
-                  <span className={admin.role === "Super Admin" ? "role-badge super" : "role-badge stall"}>
-                    {admin.role || "Stall Admin"}
+                  <span className={admin.role === "super_admin" ? "role-badge super" : "role-badge stall"}>
+                    {admin.role === "super_admin" ? "Super Admin" : "Stall Admin"}
+                  </span>
+                  <span className={`status-badge ${admin.active ? 'active' : 'inactive'}`}>
+                    {admin.active ? 'ACTIVE' : 'INACTIVE'}
                   </span>
                   <br/>
-                  <small style={{ color: '#888' }}>
-                    {admin.role === "Super Admin" ? "Full System Access" : `Assigned to Stall ${admin.stallAssigned}`}
+                  <small style={{ color: '#888', display: 'block', margin: '4px 0' }}>
+                    {admin.email}
+                  </small>
+                  <small style={{ color: '#ccc' }}>
+                    {admin.role === "super_admin" ? "Full System Access" : formatStall(admin.stallAssigned)}
                   </small>
                 </div>
                 <div>
                   <button className="btn-edit" onClick={() => openEditModal(admin)}>Edit</button>
-                  <button className="btn-delete" style={{ marginLeft: '10px' }} onClick={() => handleDeleteAdmin(admin.id, admin.name)}>Remove</button>
+                  {admin.active && (
+                    <button className="btn-delete" style={{ marginLeft: '10px' }} onClick={() => handleDisableAdmin(admin.email || admin.id, admin.name)}>Remove</button>
+                  )}
                 </div>
               </li>
             ))}
@@ -171,23 +274,34 @@ const SuperAdminDashboard = () => {
           <div className="modal-card">
             <h2 className="card-title">Edit User</h2>
             <form className="admin-form" onSubmit={handleUpdateAdmin}>
-              <label>Name</label>
-              <input type="text" className="tedx-input" value={editName} onChange={(e) => setEditName(e.target.value)} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Name *</label>
+                  <input type="text" className="tedx-input" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>IITGN Email (Read-Only)</label>
+                  <input type="email" className="tedx-input" value={editEmail} disabled style={{ opacity: 0.5, cursor: 'not-allowed' }} />
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Role *</label>
+                  <select className="tedx-input" value={editRole} onChange={(e) => setEditRole(e.target.value)}>
+                    <option value="stall_admin">Stall Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+                
+                {editRole === "stall_admin" && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Mission *</label>
+                    <input type="number" className="tedx-input" value={editStall} onChange={(e) => setEditStall(e.target.value)} min="1" max="7" required />
+                  </div>
+                )}
+              </div>
               
-              <label>Role</label>
-              <select className="tedx-input" value={editRole} onChange={(e) => setEditRole(e.target.value)}>
-                <option value="Stall Admin">Stall Admin</option>
-                <option value="Super Admin">Super Admin</option>
-              </select>
-              
-              {editRole === "Stall Admin" && (
-                <>
-                  <label>Assigned Stall</label>
-                  <input type="number" className="tedx-input" value={editStall} onChange={(e) => setEditStall(e.target.value)} min="1" max="7" />
-                </>
-              )}
-              
-              <div style={{ marginTop: '15px' }}>
+              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn btn-submit">Save Changes</button>
                 <button type="button" className="btn btn-cancel" onClick={() => setEditingAdmin(null)}>Cancel</button>
               </div>

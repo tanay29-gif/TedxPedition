@@ -18,9 +18,13 @@ function App() {
       //later we will add protected routes for the super admin dsshboard 
 
       <Route
-  path="/super-admin"
-  element={<SuperAdminDashboard />}
-/>
+        path="/super-admin"
+        element={
+          <ProtectedRoute adminOnly={true} superAdminOnly={true}>
+            <SuperAdminDashboard />
+          </ProtectedRoute>
+        }
+      />
       {/* Public Landing Page */}
       <Route path="/home" element={<LandingPage />} />
 

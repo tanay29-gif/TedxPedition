@@ -6,7 +6,8 @@ import {
 } from "react";
 
 import { authListener } from "../services/auth";
-import { getAdmin } from "../services/firestore/admin";
+import { getAdminByEmail } from "../services/admin/adminService";
+import { isSuperAdmin } from "../services/auth/adminAuth";
 import { getTeamByLeaderEmail } from "../services/firestore/teams";
 
 // Create Context
@@ -24,13 +25,30 @@ export function AuthProvider({ children }) {
             if (firebaseUser) {
                 setUser(firebaseUser);
                 try {
-                    // 1. Check if admin
                     console.log("Firebase UID:", firebaseUser.uid);
                     console.log("Email:", firebaseUser.email);
-                    const admin = await getAdmin(firebaseUser.uid);
+                    
+                    let admin = null;
+                    // 1. Check if super admin
+                    if (isSuperAdmin(firebaseUser)) {
+                        admin = {
+                            name: firebaseUser.displayName || "Super Admin",
+                            email: firebaseUser.email,
+                            role: "Super Admin",
+                            stallAssigned: "All",
+                            active: true
+                        };
+                    } else {
+                        // 2. Check if admin in Firestore
+                        const adminDoc = await getAdminByEmail(firebaseUser.email);
+                        if (adminDoc && adminDoc.active) {
+                            admin = adminDoc;
+                        }
+                    }
+
                     setAdminData(admin);
 
-                    // 2. If not admin, check if team leader
+                    // 3. If not admin, check if team leader
                     if (!admin) {
                         const team = await getTeamByLeaderEmail(firebaseUser.email);
                         setTeamData(team);
