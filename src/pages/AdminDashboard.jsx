@@ -1,21 +1,29 @@
+import { onValue, ref } from "firebase/database";
+import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, doc, getDocs, getDoc, updateDoc } from "firebase/firestore";
-import { ref, onValue } from "firebase/database";
-import { db, realtimeDb } from "../firebase/firebase";
-import { useAuth } from "../context/AuthContext";
-import { logout } from "../services/auth";
-import { getTeamById } from "../services/firestore/teams";
-import { getProgress, verifyStall, completeStall, updateStallScore, updateTimeTaken, finishStall } from "../services/firestore/progress";
-import { updateActiveTeam } from "../services/realtime/activeTeams";
-import { updateLeaderboard } from "../services/realtime/leaderboard";
+import ActiveTeamsTable from "../components/Admin/ActiveTeamsTable/ActiveTeamsTable";
+import AdminHeader from "../components/Admin/AdminHeader/AdminHeader";
+import DashboardStats from "../components/Admin/DashboardStats/DashboardStats";
+import LeaderboardPreview from "../components/Admin/LeaderboardPreview/LeaderboardPreview";
+import ScanCard from "../components/Admin/ScanCard/ScanCard";
+import TeamScoringPanel from "../components/Admin/TeamScoringPanel/TeamScoringPanel";
 import QRScanner from "../components/QRScanner/QRScanner";
-import Timer from "../components/Timer/Timer";
+import { useAuth } from "../context/AuthContext";
+import { db, realtimeDb } from "../firebase/firebase";
+import { logout } from "../services/auth";
+import { getProgress, verifyStall, unlockNextStall, finishStall } from "../services/firestore/progress";
+import { getStallKey, getStallProgressValue } from "../services/firestore/stallKeys";
+import { getTeamById } from "../services/firestore/teams";
+import { calculateBonus } from "../services/scoring";
+//for using the real time database 
 import "./AdminDashboard.css";
 
 export default function AdminDashboard() {
   const { user, adminData } = useAuth();
   const navigate = useNavigate();
+  //for the leaderboard preview
+  const [leaderboardData, setLeaderboardData] = useState([]);
 
   // Selected Stall Admin State
   const [selectedStallNum, setSelectedStallNum] = useState(1);
@@ -36,6 +44,45 @@ export default function AdminDashboard() {
   const [penaltyInput, setBonusPenalty] = useState("0");
   const [remarks, setRemarks] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  //for fetching the leaderboard data from the real time database
+  useEffect(() => {
+
+    const leaderboardRef = ref(realtimeDb, "leaderboard");
+
+    const unsubscribe = onValue(leaderboardRef, (snapshot) => {
+
+        if(snapshot.exists()){
+
+            const leaderboard = Object.entries(snapshot.val()).map(
+
+                ([teamId, data]) => ({
+
+                    id: teamId,
+
+                    ...data
+
+                })
+
+            );
+
+            setLeaderboardData(leaderboard);
+
+        }
+
+        else{
+
+            setLeaderboardData([]);
+
+        }
+
+    });
+
+    return () => unsubscribe();
+
+}, []);
+
+
 
   // Set default stall from admin profile
   useEffect(() => {
@@ -86,10 +133,41 @@ export default function AdminDashboard() {
     navigate("/", { replace: true });
   };
 
+  const normalizeTeamId = (scannedCode) => {
+    if (typeof scannedCode === "string") {
+      const trimmed = scannedCode.trim();
+      if (!trimmed) return "";
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === "object" && parsed.id) {
+          return String(parsed.id).trim().toUpperCase();
+        }
+      } catch {
+        // Fall back to treating the raw string as a team ID.
+      }
+
+      return trimmed.toUpperCase();
+    }
+
+    if (typeof scannedCode === "object" && scannedCode !== null) {
+      return String(scannedCode.id || "").trim().toUpperCase();
+    }
+
+    return "";
+  };
+
   // Admin scans a Team QR code to open scoring
   const handleTeamQRScan = async (scannedCode) => {
+    console.log("QR Scanned:", scannedCode);
     setErrorMsg("");
-    let teamId = scannedCode.trim().toUpperCase();
+
+    let teamId = normalizeTeamId(scannedCode);
+
+    if (!teamId) {
+      setErrorMsg("Invalid Team QR.");
+      return;
+    }
 
     // Parse teamId in case full QR URL is scanned
     if (teamId.includes("TEAM")) {
@@ -118,7 +196,8 @@ export default function AdminDashboard() {
     setErrorMsg("");
     try {
       const progressData = await getProgress(teamData.id);
-      const stallProg = progressData?.[`stall${selectedStallNum}`];
+      const stallKey = getStallKey(selectedStallNum);
+      const stallProg = getStallProgressValue(progressData, selectedStallNum);
 
       if (!stallProg) {
         setErrorMsg(`Stall ${selectedStallNum} has not been unlocked or started by this team.`);
@@ -129,9 +208,13 @@ export default function AdminDashboard() {
       setSelectedTeamProgress(progressData);
       setSelectedTeamStallProgress(stallProg);
       
+      // Calculate bonus based on the participant's completed timeTaken
+      const timeTaken = stallProg.timeTaken || 0;
+      const systemBonus = calculateBonus(timeTaken);
+
       // Default score values
       setScoreInput("100");
-      setBonusInput("0");
+      setBonusInput(String(systemBonus));
       setBonusPenalty("0");
       setRemarks("");
     } catch (err) {
@@ -140,116 +223,34 @@ export default function AdminDashboard() {
     }
   };
 
-  const getMs = (timestamp) => {
-    if (!timestamp) return null;
-    if (typeof timestamp.toDate === "function") return timestamp.toDate().getTime();
-    if (typeof timestamp === "object" && timestamp.seconds) return timestamp.seconds * 1000;
-    return new Date(timestamp).getTime();
-  };
-
-  const calculateTimeBonus = (seconds) => {
-    if (!seconds) return 0;
-    const mins = seconds / 60;
-    if (mins <= 1) return 50;
-    if (mins <= 2) return 40;
-    if (mins <= 3) return 30;
-    if (mins <= 4) return 20;
-    if (mins <= 5) return 10;
-    return 0;
-  };
-
   const handleScoreSubmit = async (e) => {
     e.preventDefault();
     if (!selectedTeam || submitting) return;
     setSubmitting(true);
 
     try {
-      const now = new Date();
-      const stallKey = `stall${selectedStallNum}`;
-
-      // 1. Double check / enforce timer finish (stops active clock if participant hasn't done so)
-      let endedAtMs = getMs(selectedTeamStallProgress.endedAt);
-      if (!endedAtMs) {
+      // 1. Enforce finishStall if not already finished (failsafe)
+      let currentStallProg = selectedTeamStallProgress;
+      if (!currentStallProg.endedAt) {
         await finishStall(selectedTeam.id, selectedStallNum);
-        endedAtMs = now.getTime();
+        // Reload fresh progress so we have endedAt & timeTaken
+        const progressData = await getProgress(selectedTeam.id);
+        currentStallProg = getStallProgressValue(progressData, selectedStallNum);
       }
 
-      const startedAtMs = getMs(selectedTeamStallProgress.startedAt);
-      const elapsedSeconds = startedAtMs ? Math.max(0, Math.floor((endedAtMs - startedAtMs) / 1000)) : 0;
-
-      // Update time taken if not already populated
-      await updateTimeTaken(selectedTeam.id, selectedStallNum, elapsedSeconds);
-
-      // 2. Calculate Stalled points
       const baseStallScore = Number(scoreInput) || 0;
-      const additionalBonus = Number(bonusInput) || 0;
       const penaltyDeduction = Number(penaltyInput) || 0;
-      const finalStallScore = Math.max(0, baseStallScore + additionalBonus - penaltyDeduction);
 
-      // 3. Update Stall values in progress document
-      await updateStallScore(selectedTeam.id, selectedStallNum, finalStallScore);
-      await verifyStall(selectedTeam.id, selectedStallNum, user.uid);
-      await completeStall(selectedTeam.id, selectedStallNum);
-
-      // Fetch fresh progress document to recalculate overall score
-      const progressRef = doc(db, "team_progress", selectedTeam.id);
-      const progressSnap = await getDoc(progressRef);
-      const freshProgress = progressSnap.exists() ? progressSnap.data() : selectedTeamProgress;
-
-      // 4. Calculate Final Score across all completed stalls
-      let calculatedGameScore = 0;
-      let calculatedTimeBonus = 0;
-      let calculatedTimeTaken = 0;
-
-      for (let i = 1; i <= 6; i++) {
-        const stallProg = freshProgress?.[`stall${i}`];
-        if (stallProg) {
-          const score = Number(stallProg.score || 0);
-          const time = Number(stallProg.timeTaken || 0);
-          const bonus = calculateTimeBonus(time);
-
-          calculatedGameScore += score;
-          calculatedTimeBonus += bonus;
-          calculatedTimeTaken += time;
-        }
-      }
-
-      // Add final location points if already done
-      const finalProg = freshProgress?.stall7;
-      if (finalProg && finalProg.completed) {
-        calculatedGameScore += Number(finalProg.score || 0);
-        calculatedTimeTaken += Number(finalProg.timeTaken || 0);
-      }
-
-      // Coin bonus
-      const coinBonus = (selectedTeam.coins || 0) * 10;
-      const finalTotalScore = calculatedGameScore + calculatedTimeBonus + coinBonus;
-
-      // 5. Unlock next stall for the team
-      const nextStallNum = selectedStallNum + 1;
-
-      // 6. Update Team profile in Firestore
-      await updateDoc(doc(db, "teams", selectedTeam.id), {
-        currentStall: nextStallNum,
-        totalScore: finalTotalScore,
-        totalTime: calculatedTimeTaken,
-        updatedAt: now
+      // 2. Call verifyStall (saves score, remarks, verifiedBy, and status COMPLETED)
+      await verifyStall(selectedTeam.id, selectedStallNum, {
+        baseScore: baseStallScore,
+        penalty: penaltyDeduction,
+        remarks: remarks,
+        verifiedBy: user.uid
       });
 
-      // 7. Update Realtime Database leaderboard entry
-      await updateLeaderboard(selectedTeam.id, {
-        teamName: selectedTeam.teamName,
-        totalScore: finalTotalScore,
-        totalTime: calculatedTimeTaken,
-        currentStall: nextStallNum
-      });
-
-      // 8. Reset Team active status to PLAYING for next stall (if not game finished)
-      await updateActiveTeam(selectedTeam.id, {
-        currentStall: nextStallNum,
-        status: nextStallNum > 7 ? "FINISHED" : "PLAYING",
-        updatedAt: now.getTime()
-      });
+      // 3. Unlock next stall (calculates totals, updates team/RTDB leaderboard/activeTeam)
+      await unlockNextStall(selectedTeam.id, selectedStallNum);
 
       alert("Score saved and verified successfully!");
       setSelectedTeam(null);
@@ -263,201 +264,89 @@ export default function AdminDashboard() {
       setSubmitting(false);
     }
   };
+  const currentStallKey = getStallKey(selectedStallNum);
 
+  const waitingTeams = Object.values(activeTeamsList).filter(
+    team =>
+        team.currentStall === currentStallKey &&
+        team.status === "VERIFYING"
+).length;
+
+const playingTeams = Object.values(activeTeamsList).filter(
+    team =>
+        team.currentStall === currentStallKey &&
+        team.status === "PLAYING"
+).length;
+
+// Placeholder until we implement analytics/history
+const verifiedTeams = 0;
   return (
     <div className="admin-dashboard">
-      <header className="admin-header">
-        <div className="header-branding">
-          <h2>TED<span>X</span>pedition Admin Panel</h2>
-          <span className="admin-name">Welcome, {adminData?.name || user?.displayName} ({adminData?.role || "Stall Staff"})</span>
-        </div>
-        <div className="header-actions">
-          <button onClick={handleLogout} className="btn btn-accent">Log Out</button>
-        </div>
-      </header>
-
+   <AdminHeader
+    adminData={adminData}
+    user={user}
+    onLogout={handleLogout}
+/>
+<DashboardStats
+    stallNumber={selectedStallNum}
+    waitingTeams={waitingTeams}
+    playingTeams={playingTeams}
+    verifiedTeams={verifiedTeams}
+/>
       <main className="admin-content">
         {/* Stall selector header */}
-        <section className="glass-card stall-selector-card">
-          <div className="selector-title-row">
-            <h3>Select Managed Stall Station</h3>
-            <span className="active-stall-pill font-mono">STALL #{selectedStallNum} ACTIVE</span>
-          </div>
-          <div className="stall-buttons-row">
-            {[1, 2, 3, 4, 5, 6].map((num) => (
-              <button
-                key={num}
-                className={`stall-select-btn ${selectedStallNum === num ? "active" : ""}`}
-                onClick={() => {
-                  setSelectedStallNum(num);
-                  setSelectedTeam(null);
-                }}
-              >
-                Stall {num}
-              </button>
-            ))}
-          </div>
+        
+        {selectedTeam ? (
+
+    <TeamScoringPanel
+        selectedTeam={selectedTeam}
+        selectedTeamStallProgress={selectedTeamStallProgress}
+
+        score={scoreInput}
+        setScore={setScoreInput}
+
+        bonus={bonusInput}
+        setBonus={setBonusInput}
+
+        penalty={penaltyInput}
+        setPenalty={setBonusPenalty}
+
+        remarks={remarks}
+        setRemarks={setRemarks}
+
+        submitting={submitting}
+
+        onSubmit={handleScoreSubmit}
+    />
+
+) : (
+
+    <>
+
+        <section className="admin-teams-grid">
+
+            <ScanCard
+                errorMsg={errorMsg}
+                onScan={() => setIsScannerOpen(true)}
+            />
+
+            <ActiveTeamsTable
+                loading={loading}
+                activeTeamsList={activeTeamsList}
+                teamsMetadata={teamsMetadata}
+                selectedStallNum={selectedStallNum}
+                onScoreTeam={loadTeamScoringData}
+            />
+
         </section>
 
-        {selectedTeam ? (
-          /* Scored Team Panel */
-          <section className="glass-card scoring-panel glow-red">
-            <div className="panel-header">
-              <h3>Verify & Score Team: <span className="text-red">{selectedTeam.teamName}</span></h3>
-              <button className="btn btn-accent btn-sm" onClick={() => setSelectedTeam(null)}>Back to Dashboard</button>
-            </div>
+        <LeaderboardPreview
+            leaderboardData={leaderboardData}
+        />
 
-            <div className="team-progress-info">
-              <div className="info-stat">
-                <span className="lbl">Team ID:</span>
-                <span className="val font-mono">{selectedTeam.teamId}</span>
-              </div>
-              <div className="info-stat">
-                <span className="lbl">Stall Started At:</span>
-                <span className="val">
-                  {selectedTeamStallProgress?.startedAt 
-                    ? new Date(getMs(selectedTeamStallProgress.startedAt)).toLocaleTimeString() 
-                    : "Not Started"}
-                </span>
-              </div>
-              <div className="info-stat">
-                <span className="lbl">Active Elapsed Time:</span>
-                <span className="val">
-                  <Timer startedAt={selectedTeamStallProgress?.startedAt} endedAt={selectedTeamStallProgress?.endedAt} />
-                </span>
-              </div>
-              <div className="info-stat">
-                <span className="lbl">Remaining Coins:</span>
-                <span className="val text-gold">🪙 {selectedTeam.coins}</span>
-              </div>
-            </div>
+    </>
 
-            <form onSubmit={handleScoreSubmit} className="scoring-form">
-              <div className="form-fields-grid">
-                <div className="field-group">
-                  <label htmlFor="score-val">Base Stall Score (0-100)</label>
-                  <input
-                    id="score-val"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={scoreInput}
-                    onChange={(e) => setScoreInput(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="bonus-val">Bonus Points (Optional)</label>
-                  <input
-                    id="bonus-val"
-                    type="number"
-                    min="0"
-                    value={bonusInput}
-                    onChange={(e) => setBonusInput(e.target.value)}
-                  />
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="penalty-val">Penalties (Optional)</label>
-                  <input
-                    id="penalty-val"
-                    type="number"
-                    min="0"
-                    value={penaltyInput}
-                    onChange={(e) => setBonusPenalty(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="field-group textarea-group">
-                <label htmlFor="remarks-val">Verification Remarks / Notes</label>
-                <textarea
-                  id="remarks-val"
-                  rows="3"
-                  placeholder="e.g. Completed logo recreated / Pictureka solved successfully..."
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                />
-              </div>
-
-              <button type="submit" className="btn btn-primary submit-score-btn" disabled={submitting}>
-                {submitting ? "Saving verification..." : "✅ Submit Performance & Unlock Next Stall"}
-              </button>
-            </form>
-          </section>
-        ) : (
-          /* Default dashboard showing active teams */
-          <section className="admin-teams-grid">
-            {/* Left Column: Actions */}
-            <div className="glass-card admin-action-card glow-red">
-              <h3>Scan Team Code</h3>
-              <p>Scan a team's QR code or enter their Team ID manually to record their scores.</p>
-              
-              {errorMsg && <div className="admin-error-box">⚠️ {errorMsg}</div>}
-
-              <button onClick={() => setIsScannerOpen(true)} className="btn btn-primary admin-scan-btn">
-                📷 Scan Team QR
-              </button>
-            </div>
-
-            {/* Right Column: List of playing teams */}
-            <div className="glass-card active-teams-list-card">
-              <h3>Teams Active Status</h3>
-              {loading ? (
-                <div className="list-loading">Loading active teams...</div>
-              ) : Object.keys(activeTeamsList).length === 0 ? (
-                <div className="empty-list-placeholder">No teams are currently playing.</div>
-              ) : (
-                <div className="active-teams-table-wrapper">
-                  <table className="active-teams-table">
-                    <thead>
-                      <tr>
-                        <th>Team ID</th>
-                        <th>Team Name</th>
-                        <th>Current Stall</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.keys(activeTeamsList).map((teamId) => {
-                        const activeTeam = activeTeamsList[teamId];
-                        const meta = teamsMetadata[teamId] || {};
-                        const isWaitingForThisStall = 
-                          activeTeam.currentStall === selectedStallNum && 
-                          activeTeam.status === "VERIFYING";
-
-                        return (
-                          <tr key={teamId} className={isWaitingForThisStall ? "needs-verification-row" : ""}>
-                            <td className="font-mono">{teamId}</td>
-                            <td className="bold">{meta.teamName || "Loading..."}</td>
-                            <td>Stall {activeTeam.currentStall}</td>
-                            <td>
-                              <span className={`status-badge ${activeTeam.status.toLowerCase()}`}>
-                                {activeTeam.status}
-                              </span>
-                            </td>
-                            <td>
-                              {activeTeam.currentStall === selectedStallNum && (
-                                <button
-                                  className={`btn btn-accent btn-sm ${isWaitingForThisStall ? "glow-btn" : ""}`}
-                                  onClick={() => loadTeamScoringData({ id: teamId, ...meta })}
-                                >
-                                  {isWaitingForThisStall ? "⚠️ Verify Now" : "Score Team"}
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+)}
       </main>
 
       {isScannerOpen && (

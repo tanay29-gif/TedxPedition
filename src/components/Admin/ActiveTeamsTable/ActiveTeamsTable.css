@@ -1,0 +1,201 @@
+.active-table-card{
+
+    background:#171717;
+
+    border-radius:18px;
+
+    padding:28px;
+
+    color:white;
+
+}
+
+.table-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+.table-header h2{
+
+    margin:0;
+
+}
+
+.table-header span{
+
+    color:#888;
+
+    font-size:.9rem;
+
+}
+
+.live-dot{
+
+    background:#0f5132;
+
+    color:#4ade80;
+
+    padding:8px 15px;
+
+    border-radius:20px;
+
+    font-weight:600;
+
+}
+
+.teams-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.teams-table th{
+
+    color:#888;
+
+    text-align:left;
+
+    padding:16px;
+
+}
+
+.teams-table td{
+
+    padding:18px 16px;
+
+    border-top:1px solid rgba(255,255,255,.05);
+
+}
+
+.team-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+.team-avatar{
+
+    width:45px;
+
+    height:45px;
+
+    border-radius:50%;
+
+    background:#E10600;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-weight:bold;
+
+}
+
+.team-info small{
+
+    display:block;
+
+    color:#888;
+
+}
+
+.status{
+
+    padding:8px 14px;
+
+    border-radius:25px;
+
+    font-size:.8rem;
+
+    font-weight:600;
+
+}
+
+.status.playing{
+
+    background:#0d3d66;
+
+    color:#58a6ff;
+
+}
+
+.status.verifying{
+
+    background:#5b3b00;
+
+    color:#fbbf24;
+
+}
+
+.status.finished{
+
+    background:#0d4d2d;
+
+    color:#4ade80;
+
+}
+
+.verify-btn{
+
+    border:none;
+
+    background:#E10600;
+
+    color:white;
+
+    padding:10px 18px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.verify-btn:hover{
+
+    transform:translateY(-2px);
+
+    background:#ff2b23;
+
+}
+
+.waiting-row{
+
+    background:rgba(255,165,0,.06);
+
+}
+
+.table-loading{
+
+    padding:70px;
+
+    text-align:center;
+
+}
+
+.empty-state{
+
+    text-align:center;
+
+    padding:80px;
+
+    color:#888;
+
+}

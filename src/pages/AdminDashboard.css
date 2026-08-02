@@ -12,7 +12,7 @@
   align-items: center;
   padding: 20px 8%;
   background-color: rgba(10, 10, 10, 0.85);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid vara(--border-color);
   backdrop-filter: blur(10px);
 }
 
@@ -35,16 +35,15 @@
 
 /* Main Content */
 .admin-content {
-  flex: 1;
-  padding: 40px 8%;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+    flex: 1;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px 40px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 }
-
 /* Stall Selector */
 .stall-selector-card {
   display: flex;
@@ -106,10 +105,18 @@
 }
 
 /* Teams Grid */
-.admin-teams-grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 30px;
+.admin-teams-grid{
+
+    display:grid;
+
+    grid-template-columns:360px minmax(0,1fr);
+
+    gap:32px;
+
+    align-items:start;
+
+    width:100%;
+
 }
 
 .admin-action-card {
@@ -308,19 +315,14 @@
 }
 
 /* Responsive */
-@media(max-width: 900px) {
-  .admin-teams-grid {
-    grid-template-columns: 1fr;
-  }
-  .stall-buttons-row {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .team-progress-info {
-    grid-template-columns: 1fr 1fr;
-  }
-  .form-fields-grid {
-    grid-template-columns: 1fr;
-  }
+@media(max-width:1100px){
+
+.admin-teams-grid{
+
+    grid-template-columns:1fr;
+
+}
+
 }
 @media(max-width: 600px) {
   .admin-header {

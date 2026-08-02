@@ -1,24 +1,29 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { db } from "../firebase/firebase";
 import { logout } from "../services/auth";
-import { getTeamByLeaderEmail } from "../services/firestore/teams";
-import { startStall, getProgress, markHintUsed } from "../services/firestore/progress";
-import { getStallByOrder } from "../services/firestore/stalls";
-import { updateActiveTeam } from "../services/realtime/activeTeams";
 import { getHint } from "../services/firestore/hints";
-import { updateTeam } from "../services/firestore/teams";
+import { markHintUsed, startStall } from "../services/firestore/progress";
+import { getStallKey, getStallNumber, getStallProgressValue } from "../services/firestore/stallKeys";
+import { getStallByOrder } from "../services/firestore/stalls";
+import { getTeamByLeaderEmail, updateTeam } from "../services/firestore/teams";
+import { updateActiveTeam } from "../services/realtime/activeTeams";
 
-import Timer from "../components/Timer/Timer";
 import HintDialog from "../components/HintDialog/HintDialog";
+import CurrentStallCard from "../components/Participant/CurrentStallCard/CurrentStallCard";
+import HintCard from "../components/Participant/HintCard/HintCard";
+import ProgressTracker from "../components/Participant/ProgressTracker/ProgressTracker";
+import TeamMembersCard from "../components/Participant/TeamMembersCard/TeamMembersCard";
+import TeamQRCodeCard from "../components/Participant/TeamQRCodeCard/TeamQRCodeCard";
+import TimeCard from "../components/Participant/TimeCard/TimeCard";
 import QRScanner from "../components/QRScanner/QRScanner";
-
+import TeamQR from "../components/TeamQR/TeamQR";
 import ChallengePage from "./ChallengePage";
-import WaitingForVerificationPage from "./WaitingForVerificationPage";
 import FinalLocation from "./FinalLocation";
 import FinishPage from "./FinishPage";
+import WaitingForVerificationPage from "./WaitingForVerificationPage";
 
 import "./ParticipantDashboard.css";
 
@@ -33,9 +38,9 @@ export default function ParticipantDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Reusable Component states
+  const [isTeamQROpen, setIsTeamQROpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isHintOpen, setIsHintOpen] = useState(false);
-  const [activeHintMessage, setActiveHintMessage] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   // Load team profile and start listening for real-time changes
@@ -88,18 +93,18 @@ export default function ParticipantDashboard() {
 
   // Load Stall Metadata when currentStall changes
   useEffect(() => {
-    if (!team?.currentStall) return;
+    const currentStallNum = getStallNumber(team?.currentStall);
+    if (!currentStallNum) return;
 
     const fetchStallMeta = async () => {
       try {
-        const stallMeta = await getStallByOrder(team.currentStall);
+        const stallMeta = await getStallByOrder(currentStallNum);
         setCurrentStallMeta(stallMeta);
 
-        // Fetch hint text if already used
-        const stallProg = progress?.[`stall${team.currentStall}`];
+        const stallProg = getStallProgressValue(progress, currentStallNum);
         if (stallProg?.hintUsed) {
-          const hintDoc = await getHint(`STALL0${team.currentStall}`);
-          setHintText(hintDoc?.hint || `Hint for Stall ${team.currentStall}`);
+          const hintDoc = await getHint(getStallKey(currentStallNum));
+          setHintText(hintDoc?.hint || `Hint for Stall ${currentStallNum}`);
         } else {
           setHintText("");
         }
@@ -109,7 +114,7 @@ export default function ParticipantDashboard() {
     };
 
     fetchStallMeta();
-  }, [team?.currentStall, progress?.[`stall${team?.currentStall}`]?.hintUsed]);
+  }, [team?.currentStall, progress]);
 
   const handleLogout = async () => {
     await logout();
@@ -119,29 +124,22 @@ export default function ParticipantDashboard() {
   // Participant scans a QR Code to unlock a stall
   const handleStallQRScan = async (scannedCode) => {
     setErrorMsg("");
-    // Expecting QR code value to be STALL01, STALL02, etc. or URL ending with it
-    let stallId = scannedCode.trim().toUpperCase();
-    if (stallId.includes("STALL")) {
-      const match = stallId.match(/STALL0?([1-7])/);
-      if (match) {
-        stallId = `STALL0${match[1]}`;
-      }
-    }
 
-    const expectedStallId = `STALL0${team.currentStall}`;
+    const expectedStallNum = getStallNumber(team?.currentStall);
+    const scannedStallNum = getStallNumber(scannedCode);
 
-    if (stallId !== expectedStallId) {
-      setErrorMsg(`Invalid Stall QR code. Your current assigned stall is Stall ${team.currentStall}.`);
+    if (!expectedStallNum || !scannedStallNum || scannedStallNum !== expectedStallNum) {
+      setErrorMsg(`Invalid Stall QR code. Your current assigned stall is Stall ${expectedStallNum ?? team?.currentStall}.`);
       return;
     }
 
     try {
       // 1. Record start in Firestore progress
-      await startStall(team.id, team.currentStall);
+      await startStall(team.id, expectedStallNum);
 
       // 2. Set activeTeam status to PLAYING in Realtime Database
       await updateActiveTeam(team.id, {
-        currentStall: team.currentStall,
+        currentStall: getStallKey(expectedStallNum),
         status: "PLAYING"
       });
 
@@ -163,10 +161,10 @@ export default function ParticipantDashboard() {
       await updateTeam(team.id, { coins: newCoins });
 
       // 2. Mark hint used in progress document
-      await markHintUsed(team.id, team.currentStall);
+      await markHintUsed(team.id, getStallNumber(team.currentStall));
 
       // 3. Fetch hint content
-      const hintDoc = await getHint(`STALL0${team.currentStall}`);
+      const hintDoc = await getHint(getStallKey(team.currentStall));
       const text = hintDoc?.hint || `Solve the clue at the stall to move forward!`;
       setHintText(text);
       setIsHintOpen(false);
@@ -198,11 +196,11 @@ export default function ParticipantDashboard() {
     );
   }
 
-  const currentStallNum = team.currentStall;
-  const stallProgress = progress?.[`stall${currentStallNum}`];
+  const currentStallNum = getStallNumber(team.currentStall);
+  const stallProgress = getStallProgressValue(progress, currentStallNum);
   
   // Game finished completely (all 7 stages done)
-  if (currentStallNum > 7 || (currentStallNum === 7 && progress?.stall7?.completed)) {
+  if (currentStallNum > 7 || (currentStallNum === 7 && getStallProgressValue(progress, 7)?.status === "COMPLETED")) {
     return <FinishPage team={team} progress={progress} handleLogout={handleLogout} />;
   }
 
@@ -212,13 +210,10 @@ export default function ParticipantDashboard() {
     return <FinalLocation team={team} progress={progress} handleLogout={handleLogout} />;
   }
 
-  // Stall 1-6 playing states
-  const hasStarted = !!stallProgress?.startedAt;
-  const hasEnded = !!stallProgress?.endedAt;
-  const isVerified = !!stallProgress?.completed;
+  const currentStallStatus = stallProgress?.status || "READY";
 
   // State: Finished playing, waiting for admin approval
-  if (hasStarted && hasEnded && !isVerified) {
+  if (currentStallStatus === "VERIFYING") {
     return (
       <WaitingForVerificationPage
         team={team}
@@ -230,7 +225,7 @@ export default function ParticipantDashboard() {
   }
 
   // State: Started playing, active challenge screen
-  if (hasStarted && !hasEnded) {
+  if (currentStallStatus === "PLAYING") {
     return (
       <ChallengePage
         team={team}
@@ -246,7 +241,9 @@ export default function ParticipantDashboard() {
   }
 
   // State: Default dashboard / Reach stall Clue page (Not started yet)
-  const defaultClue = currentStallMeta?.clue || "Locate the stall on your campus map to start the challenge.";
+  const hintUnlocked = !!hintText || !!stallProgress?.hintUsed;
+  const statusLabel = currentStallStatus;
+  const cardStatusClass = currentStallStatus === "PLAYING" ? "playing" : "waiting";
 
   return (
     <div className="participant-dashboard">
@@ -266,68 +263,42 @@ export default function ParticipantDashboard() {
 
       <main className="dashboard-content">
         <section className="team-status-grid">
-          <div className="glass-card team-profile-card">
-            <h3>Team Profile</h3>
-            <div className="profile-details">
-              <div className="detail-item">
-                <span className="label">Team Name:</span>
-                <span className="value text-highlight">{team.teamName}</span>
-              </div>
-              <div className="detail-item">
-                <span className="label">Team ID:</span>
-                <span className="value font-mono">{team.teamId}</span>
-              </div>
-              {team.members && (
-                <div className="detail-item members-item">
-                  <span className="label">Members:</span>
-                  <ul className="members-list">
-                    {team.members.map((m, idx) => (
-                      <li key={idx}>👤 {m}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="glass-card stat-metric-card glow-red">
-            <h3>Hint Coins</h3>
-            <div className="metric-display">
-              <span className="metric-icon">🪙</span>
-              <span className="metric-value">{team.coins}</span>
-            </div>
-            <p className="metric-desc">Available to unlock clues at active stalls.</p>
-          </div>
-
-          <div className="glass-card stat-metric-card">
-            <h3>Current Score</h3>
-            <div className="metric-display">
-              <span className="metric-icon">🏆</span>
-              <span className="metric-value">{team.totalScore} pts</span>
-            </div>
-            <p className="metric-desc">Leaderboard position updates in real-time.</p>
-          </div>
+          <TeamMembersCard team={team} />
+          <HintCard
+            coins={team.coins}
+            hintUnlocked={hintUnlocked}
+            hintText={hintText}
+            onUnlockHint={() => setIsHintOpen(true)}
+            loading={false}
+          />
+          <CurrentStallCard
+            currentStall={team.currentStall}
+            status={statusLabel}
+            onScanQR={() => setIsScannerOpen(true)}
+            gameStarted={currentStallStatus === "PLAYING"}
+          />
         </section>
 
         <section className="glass-card active-stall-card glow-red pulsing-border">
-          <div className="stall-card-header">
-            <span className="badge">STALL {currentStallNum} OF 6</span>
-            <h2>Active Stall: {currentStallMeta?.name || `Stall ${currentStallNum}`}</h2>
-          </div>
-
-          <div className="stall-clue-box">
-            <h4>📍 Destination Clue</h4>
-            <p className="clue-text">{defaultClue}</p>
-          </div>
-
           {errorMsg && <div className="scanner-error-box">⚠️ {errorMsg}</div>}
 
-          <div className="stall-action-box">
-            <button onClick={() => setIsScannerOpen(true)} className="btn btn-primary start-stall-btn">
-              📷 Scan Stall QR Code to Start
-            </button>
-            <p className="action-hint">Reach the stall location and scan the host QR to start the timer.</p>
-          </div>
+          <TimeCard
+            startedAt={stallProgress?.startedAt}
+            endedAt={stallProgress?.endedAt}
+            status={currentStallStatus === "PLAYING" ? "PLAYING" : "WAITING"}
+          />
+
+          <ProgressTracker
+            currentStall={getStallKey(currentStallNum)}
+            progress={progress}
+          />
+
+          <TeamQRCodeCard
+            teamId={team.teamId}
+            teamName={team.teamName}
+            status={cardStatusClass}
+            onOpenQR={() => setIsTeamQROpen(true)}
+          />
         </section>
       </main>
 
@@ -335,7 +306,7 @@ export default function ParticipantDashboard() {
       {isScannerOpen && (
         <QRScanner
           title={`Scan Stall ${currentStallNum} QR`}
-          placeholder={`Enter Stall Code (e.g. STALL0${currentStallNum})`}
+          placeholder={`Enter Stall Code (e.g. ${getStallKey(currentStallNum)})`}
           onScanSuccess={handleStallQRScan}
           onClose={() => {
             setIsScannerOpen(false);
@@ -343,6 +314,13 @@ export default function ParticipantDashboard() {
           }}
         />
       )}
+      {isTeamQROpen && (
+    <TeamQR
+        team={team}
+        onClose={() => setIsTeamQROpen(false)}
+    />
+)}
+
 
       <HintDialog
         isOpen={isHintOpen}

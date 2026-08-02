@@ -1,0 +1,17 @@
+{
+    "stallId": "STALL02",
+
+    "title": "Hint",
+
+    "coinCost": 1,
+
+    "hintText": "The word starts with the letter 'T'.",
+
+    "buttonText": "Unlock Hint",
+
+    "alreadyUnlockedMessage": "You have already unlocked this hint.",
+
+    "notEnoughCoinsMessage": "You don't have enough hint coins.",
+
+    "successMessage": "Hint unlocked successfully!"
+}

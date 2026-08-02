@@ -1,17 +1,16 @@
-
 {
   "leaderboard": {
     "TEAM001": {
       "teamName": "NiRaHi",
       "totalScore": 0,
       "totalTime": 0,
-      "currentStall": 1
+      "currentStall": "STALL01"
     }
   },
 
   "activeTeams": {
     "TEAM001": {
-      "currentStall": 1,
+      "currentStall": "STALL01",
       "status": "PLAYING",
       "updatedAt": 0
     }

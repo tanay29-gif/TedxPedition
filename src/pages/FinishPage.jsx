@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { getStallProgressValue } from "../services/firestore/stallKeys";
 import "./FinishPage.css";
 
 export default function FinishPage({ team, progress, handleLogout }) {
@@ -34,7 +35,7 @@ export default function FinishPage({ team, progress, handleLogout }) {
   let calculatedTimeBonus = 0;
 
   for (let i = 1; i <= 6; i++) {
-    const stallProg = progress?.[`stall${i}`];
+    const stallProg = getStallProgressValue(progress, i);
     const score = Number(stallProg?.score || 0);
     const timeTaken = Number(stallProg?.timeTaken || 0);
     const bonus = calculateTimeBonus(timeTaken);
@@ -51,7 +52,7 @@ export default function FinishPage({ team, progress, handleLogout }) {
   }
 
   // Stall 7 (Final Location) has score but no time bonus
-  const finalProg = progress?.stall7;
+  const finalProg = getStallProgressValue(progress, 7);
   const finalScore = Number(finalProg?.score || 0);
   calculatedGameScore += finalScore;
 
