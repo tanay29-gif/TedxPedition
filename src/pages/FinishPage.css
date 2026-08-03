@@ -1,0 +1,205 @@
+.finish-page {
+  min-height: 100vh;
+  background-color: var(--bg-black);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.finish-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 8%;
+  background-color: rgba(10, 10, 10, 0.8);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.finish-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.finish-header span {
+  color: var(--primary-red);
+}
+
+/* Content */
+.finish-content {
+  flex: 1;
+  padding: 40px 8%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.celebration-card {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  background-color: rgba(225, 6, 0, 0.02);
+  border-color: rgba(225, 6, 0, 0.2);
+  padding: 40px;
+}
+
+.celebration-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.trophy-icon {
+  font-size: 5rem;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+  animation: trophyFloat 3s ease-in-out infinite;
+}
+
+.celebration-hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--primary-red);
+  letter-spacing: 0.5px;
+}
+
+.celebration-hero h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.expedition-completion-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Metrics Row */
+.final-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.metric-box {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.text-red {
+  color: var(--primary-red);
+  text-shadow: 0 0 10px var(--primary-red-glow);
+}
+
+.text-gold {
+  color: var(--gold);
+}
+
+/* Table Details */
+.score-breakdown-details {
+  border-top: 1px solid var(--border-color);
+  padding-top: 24px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.score-breakdown-details h3 {
+  font-size: 1.2rem;
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.breakdown-table th, .breakdown-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.breakdown-table th {
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.breakdown-table td.bold {
+  font-weight: 600;
+  color: #fff;
+}
+
+.text-green {
+  color: var(--success-green);
+}
+
+.bonus-row td {
+  background-color: rgba(255, 215, 0, 0.02);
+  color: var(--text-grey);
+}
+
+.total-row td {
+  background-color: rgba(225, 6, 0, 0.04);
+  font-size: 1rem;
+}
+
+.finish-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.view-ranks-btn {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px;
+  font-size: 1.1rem;
+}
+
+@keyframes trophyFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.05); }
+}
+
+@media(max-width: 600px) {
+  .final-metrics-row {
+    grid-template-columns: 1fr;
+  }
+  .celebration-hero h1 {
+    font-size: 2.2rem;
+  }
+  .celebration-card {
+    padding: 20px;
+  }
+}

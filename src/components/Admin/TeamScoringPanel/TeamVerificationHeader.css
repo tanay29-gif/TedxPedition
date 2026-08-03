@@ -1,0 +1,143 @@
+.verification-header{
+
+    background:#171717;
+
+    border-radius:22px;
+
+    padding:32px;
+
+    margin-bottom:24px;
+
+    box-shadow:0 15px 35px rgba(0,0,0,.25);
+
+}
+
+.back-btn{
+
+    border:none;
+
+    background:none;
+
+    color:#ff2b2b;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    margin-bottom:28px;
+
+    transition:.3s;
+
+}
+
+.back-btn:hover{
+
+    color:#fff;
+
+}
+
+.team-hero{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:24px;
+
+}
+
+.team-avatar{
+
+    width:90px;
+
+    height:90px;
+
+    border-radius:50%;
+
+    background:#e10600;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:white;
+
+    font-size:42px;
+
+    font-weight:700;
+
+}
+
+.team-details h1{
+
+    margin:0;
+
+    color:white;
+
+    font-size:34px;
+
+    font-weight:700;
+
+}
+
+.team-details p{
+
+    margin:8px 0;
+
+    color:#9ca3af;
+
+    font-size:18px;
+
+}
+
+.status-badge{
+
+    display:inline-block;
+
+    padding:8px 18px;
+
+    border-radius:30px;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+}
+
+.status-badge.waiting{
+
+    background:#4b3200;
+
+    color:#ffcc4d;
+
+}
+
+.status-badge.playing{
+
+    background:#003c2b;
+
+    color:#22c55e;
+
+}
+
+.status-badge.finished{
+
+    background:#1f2937;
+
+    color:#d1d5db;
+
+}
+
+.status-badge.verifying{
+
+    background:#4b3200;
+
+    color:#ffcc4d;
+
+}

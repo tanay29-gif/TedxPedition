@@ -1,0 +1,537 @@
+.challenge-page {
+  min-height: 100vh;
+  background-color: var(--bg-black);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 8%;
+  background-color: rgba(10, 10, 10, 0.8);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-info h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Main Content */
+.challenge-content {
+  flex: 1;
+  padding: 30px 8%;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.challenge-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.game-instructions h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.game-instructions p {
+  color: var(--text-grey);
+  line-height: 1.5;
+}
+
+.target-logo-preview {
+  margin-top: 12px;
+  font-weight: 700;
+  background-color: rgba(255,255,255,0.03);
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 6px;
+  font-size: 1.1rem;
+}
+
+.logo-preview-white {
+  color: #fff;
+}
+
+.logo-preview-red {
+  color: var(--primary-red);
+}
+
+/* Blockly Layout */
+.blockly-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.blockly-toolbox, .blockly-workspace {
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blockly-toolbox h4, .blockly-workspace h4 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: var(--text-grey);
+  letter-spacing: 0.5px;
+}
+
+.blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.block-item {
+  text-align: left;
+  font-size: 0.85rem;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  width: 100%;
+}
+
+.block-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-white);
+}
+
+.block-item.action {
+  border-left: 4px solid var(--primary-red);
+}
+
+.block-item.draw {
+  border-left: 4px solid #00e676;
+}
+
+.workspace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.workspace-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.empty-workspace-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px;
+  line-height: 1.4;
+}
+
+.workspace-block-card {
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.workspace-block-card.action {
+  border-left: 4px solid var(--primary-red);
+}
+
+.workspace-block-card.draw {
+  border-left: 4px solid #00e676;
+}
+
+/* Control Panel */
+.blockly-control-panel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.run-btn {
+  padding: 14px 28px;
+}
+
+.rendered-output-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 12px 20px;
+  border-radius: 8px;
+}
+
+.output-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.rendered-canvas {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: var(--font-sans);
+  letter-spacing: 1px;
+}
+
+.empty-canvas-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* QR Talk Slogan game layout */
+.qr-words-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.qr-word-card {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  transition: var(--transition-normal);
+}
+
+.qr-word-card.filled {
+  border-style: solid;
+  border-color: var(--primary-red);
+  background-color: rgba(225, 6, 0, 0.02);
+  box-shadow: 0 0 10px rgba(225, 6, 0, 0.05);
+}
+
+.talk-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.talk-word {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-red);
+}
+
+.talk-input-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.word-manual-field {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.sentence-arranger {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sentence-arranger h4 {
+  font-size: 0.95rem;
+  color: var(--text-grey);
+}
+
+.arranger-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pool-word-btn {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  padding: 6px 16px;
+  border-radius: 20px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.pool-word-btn:hover {
+  border-color: var(--primary-red);
+}
+
+.pool-word-btn.used {
+  background-color: rgba(225, 6, 0, 0.1);
+  border-color: var(--primary-red);
+  color: var(--primary-red);
+}
+
+.sentence-builder-box {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-builder-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.active-sentence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.sentence-word {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: 2px solid var(--primary-red);
+  padding-bottom: 2px;
+}
+
+.validate-btn {
+  width: fit-content;
+  align-self: center;
+}
+
+/* Offline Challenge Style */
+.offline-challenge-box {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.offline-details-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.detail-row .label {
+  color: var(--text-muted);
+}
+
+.detail-row .value {
+  font-weight: 600;
+}
+
+.offline-action-box {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 24px;
+}
+
+.offline-action-box p {
+  color: var(--text-grey);
+}
+
+.finish-offline-btn {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Sidebar panel layout */
+.challenge-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.challenge-error-box {
+  background-color: rgba(225, 6, 0, 0.1);
+  border: 1px solid var(--primary-red);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.challenge-success-box {
+  background-color: rgba(0, 230, 118, 0.1);
+  border: 1px solid var(--success-green);
+  color: #fff;
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.challenge-success-box h3 {
+  color: var(--success-green);
+}
+
+.challenge-success-box p {
+  font-size: 0.9rem;
+  color: var(--text-grey);
+  line-height: 1.4;
+}
+
+.submit-final-btn {
+  background-color: var(--success-green) !important;
+}
+
+.submit-final-btn:hover {
+  background-color: #00b0ff !important;
+  box-shadow: 0 5px 15px rgba(0, 230, 118, 0.3) !important;
+}
+
+.clue-panel, .hint-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.clue-panel h4, .hint-panel h4 {
+  font-size: 0.95rem;
+  color: var(--primary-red);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.clue-panel p {
+  line-height: 1.5;
+  color: var(--text-white);
+}
+
+.hint-request p {
+  font-size: 0.9rem;
+  color: var(--text-grey);
+}
+
+.hint-btn {
+  width: 100%;
+}
+
+.hint-revealed {
+  border-left: 2px solid var(--gold);
+  padding-left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint-revealed-icon {
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hint-revealed-text {
+  font-size: 0.95rem;
+  color: var(--text-white);
+  line-height: 1.4;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out 2;
+}
+
+/* Responsive grid */
+@media(max-width: 900px) {
+  .challenge-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 600px) {
+  .challenge-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+  .challenge-content {
+    padding: 16px;
+  }
+  .blockly-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .qr-words-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

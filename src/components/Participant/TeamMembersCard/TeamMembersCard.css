@@ -1,0 +1,159 @@
+.team-members-card{
+
+    background:#171717;
+
+    border-radius:20px;
+
+    padding:28px;
+
+    color:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:25px;
+
+}
+
+.card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.card-header h2{
+
+    margin:0;
+
+    font-size:1.5rem;
+
+}
+
+.card-header p{
+
+    margin-top:6px;
+
+    color:#9ca3af;
+
+}
+
+.team-badge{
+
+    background:#E10600;
+
+    padding:10px 18px;
+
+    border-radius:25px;
+
+    font-weight:700;
+
+}
+
+.leader-card h3,
+
+.members-list h3{
+
+    margin-bottom:15px;
+
+    color:#d1d5db;
+
+}
+
+.member-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:16px;
+
+}
+
+.avatar{
+
+    width:48px;
+
+    height:48px;
+
+    border-radius:50%;
+
+    background:#E10600;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-weight:bold;
+
+    font-size:1.1rem;
+
+}
+
+.avatar.secondary{
+
+    background:#374151;
+
+}
+
+.member-item strong{
+
+    display:block;
+
+}
+
+.member-item span{
+
+    display:block;
+
+    color:#9ca3af;
+
+    font-size:.9rem;
+
+}
+
+.team-stats{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:18px;
+
+}
+
+.stat-box{
+
+    background:#111111;
+
+    border-radius:14px;
+
+    padding:18px;
+
+    text-align:center;
+
+}
+
+.stat-box span{
+
+    display:block;
+
+    color:#9ca3af;
+
+    margin-bottom:10px;
+
+}
+
+.stat-box strong{
+
+    font-size:1.3rem;
+
+}

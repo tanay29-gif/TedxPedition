@@ -1,0 +1,17 @@
+{
+    "stallId": "STALL01",
+
+    "title": "Hint",
+
+    "coinCost": 1,
+
+    "hintText": "Try solving the addition one number at a time.",
+
+    "buttonText": "Unlock Hint",
+
+    "alreadyUnlockedMessage": "You have already unlocked this hint.",
+
+    "notEnoughCoinsMessage": "You don't have enough hint coins.",
+
+    "successMessage": "Hint unlocked successfully!"
+}

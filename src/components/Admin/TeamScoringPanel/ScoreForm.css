@@ -1,0 +1,150 @@
+.score-form-card{
+
+    background:#171717;
+
+    border-radius:22px;
+
+    padding:30px;
+
+    margin-top:25px;
+
+}
+
+.section-title{
+
+    margin-bottom:25px;
+
+}
+
+.section-title h2{
+
+    color:white;
+
+    margin:0;
+
+    font-size:24px;
+
+}
+
+.section-title p{
+
+    color:#9ca3af;
+
+    margin-top:6px;
+
+}
+
+.score-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    gap:20px;
+
+}
+
+.input-group{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.input-group label{
+
+    color:#d1d5db;
+
+    font-weight:600;
+
+}
+
+.input-group input{
+
+    background:#0f0f0f;
+
+    border:1px solid #333;
+
+    color:white;
+
+    border-radius:12px;
+
+    padding:14px;
+
+    font-size:18px;
+
+    outline:none;
+
+}
+
+.input-group input:focus{
+
+    border-color:#e10600;
+
+}
+
+.remarks-group{
+
+    margin-top:28px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+.remarks-group label{
+
+    color:#d1d5db;
+
+    font-weight:600;
+
+}
+
+.remarks-group textarea{
+
+    background:#0f0f0f;
+
+    color:white;
+
+    border:1px solid #333;
+
+    border-radius:14px;
+
+    padding:16px;
+
+    resize:vertical;
+
+    outline:none;
+
+    font-size:16px;
+
+}
+
+.remarks-group textarea:focus{
+
+    border-color:#e10600;
+
+}
+
+@media(max-width:900px){
+
+.score-grid{
+
+    grid-template-columns:1fr;
+
+}
+
+}
+
+.input-group input[readonly], .input-group input.readonly-input {
+    background: #1f1f1f !important;
+    border-color: #333333;
+    color: #888888;
+    cursor: not-allowed;
+}

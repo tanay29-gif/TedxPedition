@@ -1,0 +1,235 @@
+.admin-header{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:20px 40px;
+
+    background:#111;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+    position:sticky;
+
+    top:0;
+
+    z-index:1000;
+
+}
+
+/* Left */
+
+.admin-brand{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.admin-brand h1{
+
+    margin:0;
+
+    font-size:2rem;
+
+    color:white;
+
+    font-weight:800;
+
+}
+
+.admin-brand span{
+
+    color:#E10600;
+
+}
+
+.admin-brand p{
+
+    margin-top:6px;
+
+    color:#888;
+
+    font-size:.9rem;
+
+    letter-spacing:1px;
+
+}
+
+/* Center */
+
+.admin-profile{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.admin-avatar{
+
+    width:64px;
+
+    height:64px;
+
+    border-radius:50%;
+
+    background:#E10600;
+
+    color:white;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    position:relative;
+
+}
+
+.online-indicator{
+
+    width:14px;
+
+    height:14px;
+
+    border-radius:50%;
+
+    background:#1DB954;
+
+    position:absolute;
+
+    bottom:2px;
+
+    right:2px;
+
+    border:2px solid #111;
+
+}
+
+.admin-information{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+.admin-information h2{
+
+    margin:0;
+
+    color:white;
+
+    font-size:1.2rem;
+
+}
+
+.admin-role{
+
+    display:flex;
+
+    gap:10px;
+
+    align-items:center;
+
+    color:#E10600;
+
+    font-weight:600;
+
+}
+
+.divider{
+
+    color:#666;
+
+}
+
+.admin-information small{
+
+    color:#888;
+
+}
+
+/* Right */
+
+.admin-actions{
+
+    display:flex;
+
+    gap:12px;
+
+}
+
+.logout-button{
+
+    padding:12px 22px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#E10600;
+
+    color:white;
+
+    cursor:pointer;
+
+    font-weight:700;
+
+    transition:.3s;
+
+}
+
+.logout-button:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:0 10px 20px rgba(225,6,0,.35);
+
+}
+
+/* Mobile */
+
+@media(max-width:900px){
+
+.admin-header{
+
+    flex-direction:column;
+
+    gap:20px;
+
+    padding:20px;
+
+}
+
+.admin-profile{
+
+    flex-direction:column;
+
+    text-align:center;
+
+}
+
+.admin-role{
+
+    justify-content:center;
+
+}
+
+}

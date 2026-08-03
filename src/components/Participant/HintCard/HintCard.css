@@ -1,0 +1,159 @@
+.hint-card{
+
+    background:#171717;
+
+    border-radius:20px;
+
+    padding:28px;
+
+    color:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+
+}
+
+.hint-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.hint-header h2{
+
+    margin:0;
+
+    font-size:1.4rem;
+
+}
+
+.hint-header p{
+
+    margin-top:8px;
+
+    color:#9ca3af;
+
+}
+
+.coin-badge{
+
+    background:#E10600;
+
+    color:white;
+
+    padding:10px 18px;
+
+    border-radius:25px;
+
+    font-weight:700;
+
+}
+
+.locked-box{
+
+    border:2px dashed rgba(255,255,255,.1);
+
+    border-radius:16px;
+
+    padding:40px;
+
+    text-align:center;
+
+}
+
+.lock-icon{
+
+    font-size:3rem;
+
+    margin-bottom:15px;
+
+}
+
+.locked-box p{
+
+    font-size:1.1rem;
+
+    font-weight:700;
+
+    margin:0;
+
+}
+
+.locked-box small{
+
+    color:#9ca3af;
+
+}
+
+.hint-box{
+
+    background:#111111;
+
+    border-left:4px solid #E10600;
+
+    border-radius:14px;
+
+    padding:24px;
+
+}
+
+.hint-box h3{
+
+    margin-top:0;
+
+    color:#E10600;
+
+}
+
+.hint-box p{
+
+    line-height:1.7;
+
+    color:#d1d5db;
+
+}
+
+.unlock-btn{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#E10600;
+
+    color:white;
+
+    font-size:1rem;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.unlock-btn:hover:not(:disabled){
+
+    background:#ff2b23;
+
+}
+
+.unlock-btn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+
+}
