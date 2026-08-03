@@ -1,495 +1,359 @@
-# TEDxPedition – Implementation Status
+# TEDxPedition – System & Feature Implementation Report
 
-**Last Updated:** July 2026
-
----
-
-# Project Overview
-
-TEDxPedition is a web application built for the TEDx IIT Gandhinagar hybrid treasure hunt event. The application manages the complete participant journey, including authentication, clue progression, QR-based gameplay, stall verification, scoring, admin verification, and the live leaderboard.
-
-At the current stage, the backend architecture is mostly designed and implemented, while the frontend is partially completed. The remaining work primarily depends on clarifying the event workflow with the organizers.
+**Last Updated:** August 2026  
+**Status:** Core Framework Complete | Live Database Integration Active | Awaiting Real Game Content  
 
 ---
 
-# Current Implementation Status
+## 1. Core Architecture & Technology Stack
 
-## 1. Firebase Setup ✅
+TEDxPedition is a modern, high-fidelity web application built to manage a hybrid treasure hunt event for **TEDx IIT Gandhinagar**. The application coordinates authentication, progress tracking, live scoring, stall verification, and leaderboard rankings.
 
-The project is connected with Firebase.
-
-### Firebase Services Used
-
-- Firebase Authentication
-- Cloud Firestore
-- Firebase Realtime Database
-
----
-
-## 2. Authentication System ✅
-
-Authentication has been implemented using Google Sign-In.
-
-### Current Authentication Rules
-
-Only **IIT Gandhinagar Google accounts** are allowed to access the application.
-
-Allowed email format:
-
-```
-*@iitgn.ac.in
-```
-
-Any other Google account is rejected during login.
+### Tech Stack Details:
+- **Frontend Core:** React (Vite-powered SPA), structured with components, hooks, context, and CSS.
+- **Styling:** Vanilla CSS following a premium **TEDx Dark Theme** (high-contrast black/grey backgrounds, signature red glows `#e62b1e`, and glassmorphism cards).
+- **Backend-as-a-Service (BaaS):** Firebase.
+  - **Firebase Authentication:** Google Sign-In with strict domain restrictions.
+  - **Cloud Firestore:** Relational-like transactional document storage for persistent data (profiles, progress metrics, admin configuration).
+  - **Firebase Realtime Database (RTDB):** Ultra-low latency database for real-time tracking (live leaderboard, active team dashboards, admin control channels).
+- **Routing:** React Router v6 with custom Route Guards (Protected Routes) to handle role-based navigation.
 
 ---
 
-## 3. Participant Authentication (Current Approach)
+## 2. Database Schema & Data Models
 
-Initially there was confusion regarding participant authentication.
+To optimize performance and minimize Firebase reads/costs, the system uses a **hybrid database model** combining Firestore (for persistent transactional records) and Realtime Database (for low-latency streams).
 
-After discussion, the current implementation introduces the concept of a **Team Leader**.
+### 2.1. Cloud Firestore Collections
 
-### Current Flow
-
-- Every registered team has one Team Leader.
-- Only the Team Leader logs into the application.
-- Login is done using the Team Leader's IIT Gandhinagar Google account.
-- After successful login, the application identifies the team associated with that leader.
-- The Team Leader represents the complete team during the event.
-
-Current implementation therefore assumes:
-
-```
-One Team
-        ↓
-One Team Leader
-        ↓
-One Google Login
-        ↓
-Entire Team Dashboard
+#### `admin_users`
+Stores configuration details and credentials for admins. The document ID is the admin's email address.
+```json
+{
+  "name": "Jane Doe",
+  "email": "janedoe@iitgn.ac.in",
+  "role": "stall_admin", // "stall_admin" | "super_admin"
+  "stallAssigned": "STALL03", // "STALL01" to "STALL07", or "All" for Super Admins
+  "active": true,
+  "createdAt": "Timestamp",
+  "updatedAt": "Timestamp"
+}
 ```
 
----
-
-## 4. Admin Authentication ✅
-
-Admin login is completely separated from participant login.
-
-Current authentication flow:
-
-```
-Google Login
-        │
-        ▼
-Check admin_users Collection
-        │
-        ├──────── Yes
-        │
-        ▼
-Admin Dashboard
-        │
-        └──────── No
-                  │
-                  ▼
-Check Team Leader
-                  │
-                  ▼
-Participant Dashboard
+#### `teams`
+Stores overall team profiles, current location, and overall metrics. Document ID is the Team ID (e.g., `TEAM001`).
+```json
+{
+  "teamId": "TEAM001",
+  "teamName": "Red Shifters",
+  "leaderEmail": "leader@iitgn.ac.in",
+  "coins": 3, // Remaining Hint Coins (starts at 3, decrements on hint use)
+  "currentStall": "STALL01", // "STALL01" to "STALL07"
+  "totalScore": 0,
+  "totalTime": 0, // Total seconds taken across completed stalls
+  "members": ["Member 1", "Member 2", "Member 3"],
+  "createdAt": "Timestamp",
+  "updatedAt": "Timestamp"
+}
 ```
 
-Current differentiation is based on Firestore.
-
-### Admin
-
-If the logged-in user's UID exists inside
-
-```
-admin_users
-```
-
-the application opens the Admin Dashboard.
-
-### Participant
-
-If the user is not an admin but is the registered Team Leader of a team, the Participant Dashboard is opened.
-
----
-
-# Firestore Collections Implemented
-
-Current collections:
-
-```
-admin_users
-teams
-team_progress
-stalls
-hints
-qr_words
+#### `team_progress`
+Stores detailed stall-by-stall tracking for each team. The document ID matches the Team ID. Each stall key holds its state, timeline, and scores.
+```json
+{
+  "STALL01": {
+    "status": "COMPLETED", // "READY" | "PLAYING" | "VERIFYING" | "COMPLETED"
+    "startedAt": "Timestamp",
+    "endedAt": "Timestamp",
+    "timeTaken": 142, // seconds
+    "hintUsed": false,
+    "baseScore": 100,
+    "bonus": 40, // Calculated from timeTaken
+    "penalty": 0, // Deducted by Stall Admin
+    "finalScore": 140, // baseScore + bonus - penalty
+    "remarks": "Clean solve",
+    "verifiedBy": "janedoe@iitgn.ac.in",
+    "verifiedAt": "Timestamp"
+  },
+  "STALL02": { "status": "READY" },
+  "STALL03": { "status": "READY" },
+  "STALL04": { "status": "READY" },
+  "STALL05": { "status": "READY" },
+  "STALL06": { "status": "READY" },
+  "STALL07": { "status": "READY" } // Final destination auditorium stage
+}
 ```
 
-Realtime Database:
-
+#### `event_status`
+Global document (ID `current`) controlling the state of the game.
+```json
+{
+  "status": "RUNNING", // "READY" (waiting to start) | "RUNNING" (in progress) | "ENDED" (concluded)
+  "startedAt": "Timestamp",
+  "endedAt": "Timestamp",
+  "updatedAt": "Timestamp"
+}
 ```
-leaderboard
-activeTeams
-eventStatus
+
+#### `stalls`
+Metadata for each mission station. Document ID is `STALL01` to `STALL07`.
+```json
+{
+  "stallId": "STALL01",
+  "name": "Logical Sorter",
+  "description": "Solve the logic grid to obtain the passcode.",
+  "location": "LHC Foyer",
+  "order": 1
+}
+```
+
+#### `hints`
+Contains the solutions/hints unlocked when teams spend a coin. Document ID matches the Stall ID.
+```json
+{
+  "stallId": "STALL01",
+  "hintText": "Look under the red container near the left entrance."
+}
+```
+
+#### `qr_words`
+Stores correct words associated with QR Codes scanned during the Stall 2 Slogan Hunt. Document ID is `QR001` to `QR006`.
+```json
+{
+  "qrId": "QR001",
+  "talkId": "TALK1",
+  "word": "Ideas"
+}
 ```
 
 ---
 
-# CRUD Operations ✅
+### 2.2. Realtime Database (RTDB) Schema
 
-CRUD operations have been written and tested individually.
-
-The following modules have been implemented and tested:
-
-- Teams
-- Admin
-- Stalls
-- QR
-- Hints
-- Progress
-
-Dedicated test files were written to verify Firestore operations before integrating them into the application.
-
----
-
-# Frontend Progress
-
-Several frontend pages have already been designed.
-
-Current pages include:
-
-- Landing Page
-- Login Page
-- Participant Dashboard
-- Admin Dashboard
-- QR Scanner
-- Hero Section
-- Navbar
-- Timer Component
-
-The frontend architecture has been planned, but development is currently paused because some parts of the actual event workflow are still unclear.
-
----
-
-# Current Backend Improvements
-
-The backend structure has been redesigned several times.
-
-Major improvements include:
-
-- Team collection
-- Team Progress collection
-- Admin separation
-- QR architecture
-- Realtime leaderboard structure
-- Active Teams management
-
----
-
-# Current Development
-
-## Team Progress Redesign
-
-The old structure was considered insufficient.
-
-A new structure is being introduced where every stall stores its own progress.
-
-Example:
-
-```
-TEAM001
-
-↓
-
-STALL01
-
-↓
-
-status
-
-startedAt
-
-endedAt
-
-timeTaken
-
-hintsConsumed
-
-baseScore
-
-timeBonus
-
-hintDeduction
-
-manualBonus
-
-rulePenalty
-
-finalScore
+#### `leaderboard`
+Used by the public Leaderboard page to subscribe to live rank changes instantly.
+```json
+"leaderboard": {
+  "TEAM001": {
+    "teamName": "Red Shifters",
+    "totalScore": 140,
+    "totalTime": 142,
+    "currentStall": "STALL02"
+  }
+}
 ```
 
-This redesign allows automatic score calculation after every stall.
-
----
-
-# Seed Scripts (In Progress)
-
-To avoid manually creating Firestore documents, seed scripts are being developed.
-
-Current scripts:
-
-```
-seedTeams.js
-
-seedStalls.js
-
-seedProgress.js
+#### `activeTeams`
+Used by Stall Admins to see real-time queues at their station.
+```json
+"activeTeams": {
+  "TEAM001": {
+    "currentStall": "STALL02",
+    "status": "PLAYING", // "READY" | "PLAYING" | "VERIFYING" | "FINISHED"
+    "updatedAt": 1793798210392
+  }
+}
 ```
 
-Purpose:
-
-- Automatically create Teams
-- Automatically create Stalls
-- Automatically create Team Progress documents
-
-Current issue:
-
-The scripts are still under development.
-
-The current challenge involves correctly initializing Firestore documents from Node.js while handling Firebase configuration and timestamps.
-
 ---
 
-# Current Problems / Open Questions
+## 3. Authentication & Access Control Flow
 
-Although most of the architecture has been planned, several important workflow questions still remain unanswered.
-
----
-
-## 1. Team QR Workflow ❓
-
-This is currently the biggest unresolved part of the project.
-
-Questions that still need clarification:
-
-- When is the Team QR generated?
-- Who receives the Team QR?
-- Is the Team QR sent only to the Team Leader?
-- Does the Team Leader download it?
-- Is the Team QR displayed inside the Participant Dashboard?
-- Is the Team QR used during login?
-- Is Google Login sufficient, making the Team QR only useful during gameplay?
-- Should the Team QR become visible only after successful login?
-
-Current understanding:
-
-The Team QR will most likely be used **only for admin verification after completing a challenge**, but this needs confirmation from the organizers.
-
----
-
-## 2. Participant Login Workflow ❓
-
-Current implementation:
+The authentication system is implemented via **Google Sign-in** and strictly restricted to the **IIT Gandhinagar** institutional domain.
 
 ```
-Team Leader
-
-↓
-
-Google Login
-
-↓
-
-Participant Dashboard
+                  Google Login Redirect
+                           │
+                           ▼
+             Is Email domain @iitgn.ac.in?
+                           │
+             ┌─────────────┴─────────────┐
+            No                           Yes
+             │                            │
+             ▼                            ▼
+      Access Rejected             Check Firestore `admin_users`
+                                          │
+                    ┌─────────────────────┴─────────────────────┐
+                   Yes                                         No
+                    │                                           │
+                    ▼                                           ▼
+          Check Admin Role                     Check Firestore `teams` for Leader Email
+                    │                                           │
+          ┌─────────┴─────────┐                       ┌─────────┴─────────┐
+      super_admin        stall_admin                 Yes                  No
+          │                   │                       │                    │
+          ▼                   ▼                       ▼                    ▼
+     Super Admin         Stall Admin             Participant           Redirected to
+      Dashboard           Dashboard               Dashboard             `/no-team`
 ```
 
-Still unclear:
-
-Should participants additionally scan the Team QR before starting the event, or is Google Login alone sufficient?
-
----
-
-## 3. Team QR Distribution ❓
-
-Still undecided:
-
-Possible approaches include:
-
-- Email the Team QR to the Team Leader
-- Download after registration
-- Display permanently inside the dashboard
-- Display only during the event
-
-This decision affects both backend and frontend implementation.
+### Route Protection:
+All sensitive paths are locked behind `<ProtectedRoute>` checks. 
+- If a regular user attempts to visit `/admin` or `/super-admin`, they are redirected to `/`.
+- If an admin attempts to visit `/participant`, they are routed to their designated admin panel.
+- If a logged-in user does not belong to any team and is not an admin, they are blocked on the `/no-team` screen prompting them to go to the physical helpdesk.
 
 ---
 
-## 4. Scoring Rules ❓
+## 4. Detailed Feature Breakdown & Flow
 
-The scoring architecture has been designed, but the actual scoring rules are still incomplete.
+### 4.1. Event Lifecycle Control (Super Admin)
+Super Admins have master authority over the event via the `/super-admin` portal.
+- **Event Status Engine:**
+  - `READY` State: Lock all participants on a static loading screen ("Waiting for Event Start"). Prevents early starts.
+  - `RUNNING` State: Unlocks dashboards and triggers game clocks.
+  - `ENDED` State: Immediately locks dashboards, records final times, stops active missions, and redirects participants to the final rankings page.
+- **Staff Administration:** Super Admins can add new Stall Admins, change their assigned stall numbers, or disable admin access on-the-fly.
 
-Current automatic calculations:
+### 4.2. Team Registration & Management
+- A team is registered in Firestore containing a designated **Team Leader** (using their IITGN email).
+- Members of the team are listed inside the document.
+- Only the Team Leader logs in to represent the team. This ensures single-device progression per team, eliminating duplicate logs or split-run cheats.
 
-- Base Score
-- Time Bonus
-- Hint Deduction
-- Penalty?
+### 4.3. Live Leaderboard System
+- Accessible publicly at `/leaderboard`.
+- **Podium Visuals:** Displays the top 3 teams on a visual 1st, 2nd, and 3rd rank podium using high-fidelity cards.
+- **Standings Table:** Lists all teams. Standings are computed dynamically using the following tie-breaker hierarchy:
+  1. **Total Score (Descending):** Highest points first.
+  2. **Total Time (Ascending):** If scores tie, the team that took less active playing time ranks higher.
+  3. **Current Stall (Descending):** If scores and times tie, the team that has progressed further in the stalls ranks higher.
 
-Still unclear:
+### 4.4. Active Team Location Tracking
+- As soon as a team unlocks a stall, their state is written to the RTDB `/activeTeams` channel.
+- This allows Stall Admins to see in real-time which teams are currently "PLAYING" at their station and which teams are waiting for grading ("VERIFYING").
 
-### Penalty Rule
-
-Questions:
-
-- What exactly counts as a penalty?
-- Who decides penalties?
-- Are penalties used at all?
-- Will admins manually assign penalties?
-- Are penalties predefined by organizers?
-
-Without this clarification, the final score calculation cannot be completed.
-
----
-
-## 5. Realtime Score Calculation ❓
-
-The live leaderboard depends on the final scoring algorithm.
-
-The backend architecture is ready for realtime updates, but the actual formula cannot be finalized until the scoring rules are confirmed.
-
----
-## 5. Final ending
-According to the event design document, after successfully completing all six stalls, the team will have collected six cards. These cards together reveal a map that points to the final destination, Jasubhai Auditorium.
-
-The expected event flow is:
+### 4.5. Participant Journey & Gameplay States
+For any given stall, a participant team cycles through four distinct states. 
 
 ```
-Complete Stall 1
-      ↓
-Complete Stall 2
-      ↓
-...
-      ↓
-Complete Stall 6
-      ↓
-Collect 6 Cards
-      ↓
-Cards Form a Map
-      ↓
-Reach Jasubhai Auditorium
-      ↓
-Enter Final Location
-      ↓
-Correct Location Verified
-      ↓
-Finish Time Recorded
-      ↓
-Final Leaderboard Updated
+┌──────────────┐   Scan Stall QR   ┌──────────────┐   Solve Game   ┌──────────────┐
+│    READY     │ ────────────────> │   PLAYING    │ -------------> │  VERIFYING   │
+└──────────────┘                   └──────────────┘                └──────────────┘
+       ▲                                                                  │
+       │                        Unlock Next Stall                         │
+       └──────────────────────────────────────────────────────────────────┘
+                                 (Stall Admin Grades)
 ```
 
-### Pending Clarifications
+1. **READY State:**
+   - The team is looking at their dashboard.
+   - They see their current Hint Coin balance, a textual clue to find the physical station, and a scanner button.
+   - **QR Scanner:** To start the mission, they must scan the physical QR code posted at the stall. The app validates the scanned code against `team.currentStall`. If wrong, it alerts the team; if correct, it transitions the state to `PLAYING` and logs the `startedAt` timestamp.
+2. **PLAYING State:**
+   - A live game timer starts counting up on the dashboard.
+   - The team performs the challenge (either a digital game on the screen or a physical task on-site).
+   - **Hint System:** If stuck, they can spend a Hint Coin. This deducts 1 coin from their profile, flags `hintUsed: true` in the stall progress, and reveals the station's hint.
+   - Upon solving, the team submits their completion, which records the `endedAt` timestamp, calculates the `timeTaken` (seconds), and changes their status to `VERIFYING`.
+3. **VERIFYING State:**
+   - The team's dashboard turns into a waiting screen ("Waiting for Admin Verification").
+   - The team displays their **Team QR Code** on their screen.
+   - They cannot progress until a physical Stall Admin scans their Team QR and enters their score.
+4. **COMPLETED State (and Next Stall Unlock):**
+   - The Stall Admin submits their score.
+   - The system calculates the team's final scores, updates their totals, publishes them to the leaderboard, and pushes their `currentStall` to the next level (returning them to the `READY` state for the next stall).
 
-Although the overall ending is defined, some implementation details still need confirmation from the organizers.
-
-- How are the six cards distributed (physical or digital)?
-- Will the website display the collected cards or are they handled physically?
-- What does "Enter Final Location" mean? (Text input, QR scan, or admin verification)
-- Is the Final Treasure Hunt considered a separate Stall 7 or simply the concluding stage after Stall 6?
-- Is another Team QR scan required at the final location?
-- Is there an admin verification at the final location?
-- Should the participant dashboard display a final completion page with score, rank, and completion time after finishing the event?
-# Remaining Technical Tasks
-
-## Backend
-
-- Finish Firestore seed scripts
-- Complete Team Progress redesign
-- Complete automatic scoring module
-- Integrate realtime leaderboard updates
-- Finalize Team QR workflow
-- Finalize participant login workflow
-
----
-
-## Frontend
-
-Once the workflow is finalized:
-
-- Display Team QR appropriately
-- Integrate complete gameplay flow
-- Connect Participant Dashboard with backend
-- Connect Admin Dashboard with backend
-- Complete Challenge Pages
-- Complete Final Location Page
-- Complete Finish Page
+#### The Final Stage (Stall 7 - Final Location):
+- Once Stall 6 is verified, the team unlocks Stall 7.
+- Their dashboard tells them they have successfully completed all 6 stalls and collected 6 cards.
+- The cards form a physical/digital map.
+- The team clicks "Start Final Hunt" (starting the final stage timer).
+- They must run to the final location indicated by the map (**Jasubhai Auditorium**) and enter the location name in the input box.
+- Once they enter "jasubhai auditorium", the system completes Stall 7, records their total finish time, recalculates their final leaderboard scores, and displays the **Finish Page** showing their detailed performance table and trophy.
 
 ---
 
-# UI Improvements
+### 4.6. Stall Verification & Scoring Engine
+When a Stall Admin grades a team, the scoring engine calculates the final stall score as:
+$$\text{Final Score} = \text{Base Score} + \text{Time Bonus} - \text{Penalty}$$
 
-After all functionality is complete, the remaining work will focus on UI/UX improvements.
-
-Planned improvements include:
-
-- Better TEDx branding
-- Better dashboard layout
-- Responsive design improvements
-- Improved participant experience
-- Improved admin workflow
-- Better animations
-- Loading states
-- Success/Error feedback
-- Final polishing
-
----
-
-# Current Project Status
-
-## Completed
-
-- Firebase setup
-- Authentication
-- Admin authentication
-- Team Leader authentication
-- Firestore structure
-- Realtime Database setup
-- CRUD implementation
-- Backend architecture planning
-- Major frontend design
-- QR architecture planning
+- **Base Score:** Up to 100 points, inputted manually by the Admin based on performance.
+- **Time Bonus (Auto-computed):** Reward for speed, encouraging fast execution:
+  - $\le 1 \text{ minute} \implies +50 \text{ points}$
+  - $\le 2 \text{ minutes} \implies +40 \text{ points}$
+  - $\le 3 \text{ minutes} \implies +30 \text{ points}$
+  - $\le 4 \text{ minutes} \implies +20 \text{ points}$
+  - $\le 5 \text{ minutes} \implies +10 \text{ points}$
+  - $> 5 \text{ minutes} \implies +0 \text{ points}$
+- **Penalty:** Manually inputted deduction (e.g. for rule-breaking or behavior).
+- **Remaining Coins Bonus:** At the very end of the event, each remaining Hint Coin is converted into points:
+  $$\text{Coin Bonus} = \text{Remaining Coins} \times 10 \text{ points}$$
 
 ---
 
-## In Progress
+## 5. Mock Games vs. Real Game Workflows (What is Pending)
 
-- Firestore seed scripts
-- Team Progress redesign
-- Score calculation architecture
+While the full architectural, database, routing, and verification systems are fully implemented and functional, **the actual gameplay content is currently mock content.** We are waiting for the final specifications from the event coordinators.
+
+### Current Implementation (Placeholders):
+- **Stall 1 (Blockly Logo Recreator):** A drag-and-drop programming challenge where teams arrange blocks to recreate the "TEDx" logo. (TED = white color, x = red color).
+- **Stall 2 (Slogan Word Arranger):** A campus hunt where teams scan 6 banners to retrieve words and arrange them to spell *"ideas worth spreading can change lives"*.
+- **Stalls 3-6 (Physical Activity Placeholder):** Standard placeholders showing instructions to perform on-site tasks, then clicking "Finish" to call the admin.
+- **Stall 7 (Final Destination Solver):** Text box checking for "jasubhai auditorium".
+
+### Production Customization Requirements (What must be updated for the Real Game):
+1. **Real Game Configurations:** Replacing mock games with the actual games designed by the TEDx team.
+2. **Real Clues and Hints:** Updating the `stalls` and `hints` Firestore collections with the final clues and hints designed for the event.
+3. **Physical QR Code Mapping:** Generating and printing QR codes matching the exact database entries (e.g. `STALL01`, `STALL02`, `QR001`, `QR002`) to post at physical booths and banners.
+4. **Final Destination:** Confirming the final destination coordinates or text validation (e.g., whether to use GPS location, admin verification at the auditorium, or a final QR code scan).
 
 ---
 
-## Waiting for Clarification
+## 6. Developer Utilities & Database Seeding Scripts
 
-- Team QR workflow
-- Participant login workflow
-- Penalty rules
-- Final scoring formula
-- Realtime leaderboard calculation
+To rapidly bootstrap, reset, or test the environment, a set of administrative Node.js scripts is located under the `/scripts` directory.
+
+- **`firebaseNode.js`:** Initializes the Firebase Admin SDK in Node.js, reading secrets from environment variables.
+- **`createAdmins.js`:** Seeds initial Super Admin and Stall Admin accounts into the `admin_users` collection.
+- **`createTeams.js`:** Creates standard test teams (TEAM001 to TEAM010) with member lists and leader emails.
+- **`createStalls.js`:** Seeds metadata for Stalls 1-7 (names, descriptions, locations).
+- **`createHints.js`:** Populates the `hints` collection with hints corresponding to each stall.
+- **`createQRWords.js`:** Registers the words and talk banners associated with Stall 2.
+- **`createTeamProgress.js`:** Initializes empty progress templates for all teams to ensure they can begin playing immediately.
 
 ---
 
-# Expected Final Development Order
+## 7. Production Operations Guide
 
-1. Finish seed scripts
-2. Finalize Team QR workflow
-3. Finalize scoring rules
-4. Complete backend integration
-5. Complete frontend functionality
-6. Integrate realtime leaderboard
-7. Perform UI/UX enhancement
-8. Testing
-9. Production deployment
+### 7.1. Database Reset / Initialization
+Before the event starts:
+1. Clear the Firestore collections (`teams`, `team_progress`, `admin_users`, `stalls`, `hints`, `qr_words`) and the Realtime Database nodes (`leaderboard`, `activeTeams`).
+2. Run the seeding scripts to initialize the data structures:
+   ```bash
+   node scripts/createStalls.js
+   node scripts/createHints.js
+   node scripts/createQRWords.js
+   node scripts/createAdmins.js
+   node scripts/createTeams.js
+   node scripts/createTeamProgress.js
+   ```
+3. Set the global event status in Firestore `event_status/current` to `READY`.
+
+### 7.2. During the Event
+1. Log in to the Super Admin panel (`/super-admin`) and click **Start Event**. This sets the state to `RUNNING` in Firestore.
+2. Participant dashboards will automatically refresh and unlock.
+3. Stall Admins log in, navigate to their assigned stall dashboards, and monitor the live queue of teams.
+4. When a team finishes a stall:
+   - The team displays their Team QR.
+   - The Stall Admin clicks **Scan Team QR** (or selects the team from the queue), reviews their active time, inputs the score & penalty, and hits **Submit**.
+   - The team is automatically unlocked and routed to the next stall.
+5. In case of user login issues, Super Admins can manually register teams or reset team progression.
+
+### 7.3. Concluding the Event
+1. Once the top teams reach the final destination and log their times, go to `/super-admin` and click **End Event**.
+2. This locks the game state to `ENDED`, shutting down scanner interfaces and displaying the final standings.
+
+---
+
+## 8. Current Project Status & Action Items
+
+| Component | Status | Description / Next Steps |
+| :--- | :--- | :--- |
+| **Auth System** | **Complete** ✅ | Restricted to `@iitgn.ac.in` domain. Role routing active. |
+| **Super Admin Portal** | **Complete** ✅ | Handles admin creation, role assignments, and global event controls. |
+| **Admin Scoring Portal** | **Complete** ✅ | Queue tables, QR verification scanners, and scoring calculations. |
+| **Live Leaderboard** | **Complete** ✅ | RTDB integrations, podium views, and three-stage sorting algorithms. |
+| **Progress Tracker** | **Complete** ✅ | Automated transitions between READY, PLAYING, VERIFYING, and COMPLETED. |
+| **Scoring Logic** | **Complete** ✅ | Decaying time-based bonuses, coin scoring, and manual grading interfaces. |
+| **Seed Scripts** | **Complete** ✅ | Automated setup scripts for all Firestore documents. |
+| **Gameplay Content** | **Pending** ⏳ | **Awaiting final rules, clues, hints, and games from organizers.** |
+| **Physical Collateral** | **Pending** ⏳ | **Generating and printing QR codes/banners for setup.** |
