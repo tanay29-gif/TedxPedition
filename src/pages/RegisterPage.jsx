@@ -83,7 +83,21 @@ function RegisterPage() {
                 return;
             }
 
-            const teamId = `TEAM${Date.now()}`;
+            // 2. Check if Team Name is taken
+            const nameQuery = query(collection(db, "teams"), where("teamName", "==", formData.teamName.trim()));
+            const nameSnapshot = await getDocs(nameQuery);
+
+            if (!nameSnapshot.empty) {
+                setError("A team with this name already exists. Please choose another name.");
+                setLoading(false);
+                return;
+            }
+
+
+            const shortId = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const timeStamp = Date.now().toString().slice(-6);
+            const teamId = `TEAM-${shortId}-${timeStamp}`;
+
             const teamMembers = [formData.member1.trim(), formData.member2.trim(), formData.member3.trim()];
             const existingQuery = query(collection(db, "teams"), where("teamName", "==", formData.teamName.trim()));
             const existingSnapshot = await getDocs(existingQuery);
@@ -107,6 +121,29 @@ function RegisterPage() {
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
+
+            const sheetData = {
+                teamId: teamId,
+                teamName: formData.teamName.trim(),
+                leaderEmail: signedInUser.email,
+                member1: formData.member1.trim(),
+                member2: formData.member2.trim(),
+                member3: formData.member3.trim()
+            };
+
+            // Replace with your actual Apps Script Web App URL
+            const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SHEET_URL;
+
+            // Use 'no-cors' if you face issues, but 'cors' is preferred if supported
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // Crucial for Apps Script redirects
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(sheetData),
+            });
+
 
             setLoading(false);
             navigate("/thank-you", { replace: true });
