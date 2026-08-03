@@ -1,0 +1,186 @@
+.current-stall-card{
+
+    background:#171717;
+
+    border-radius:20px;
+
+    padding:28px;
+
+    color:white;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:25px;
+
+}
+
+.stall-status.ready{
+    background:#1f1f1f;
+    color:#e10600;
+    border: 1px solid #e10600;
+}
+
+.stall-status.locked{
+    background:#111;
+    color:#555;
+    border: 1px solid #222;
+}
+
+.stall-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+}
+
+.stall-header h2{
+
+    margin:0;
+
+    font-size:1.5rem;
+
+}
+
+.stall-header p{
+
+    margin-top:8px;
+
+    color:#9ca3af;
+
+}
+
+.stall-status{
+
+    padding:8px 16px;
+
+    border-radius:25px;
+
+    font-size:.8rem;
+
+    font-weight:700;
+
+}
+
+.stall-status.waiting{
+
+    background:#4b5563;
+
+    color:white;
+
+}
+
+.stall-status.playing{
+
+    background:#14532d;
+
+    color:#4ade80;
+
+}
+
+.stall-status.verifying{
+
+    background:#78350f;
+
+    color:#fbbf24;
+
+}
+
+.stall-body{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:25px;
+
+}
+
+.stall-icon{
+
+    width:75px;
+
+    height:75px;
+
+    border-radius:18px;
+
+    background:#E10600;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:2rem;
+
+}
+
+.stall-body h1{
+
+    margin:0;
+
+    font-size:2.2rem;
+
+}
+
+.stall-body span{
+
+    color:#9ca3af;
+
+}
+
+.scan-stall-btn{
+
+    width:100%;
+
+    padding:16px;
+
+    background:#E10600;
+
+    color:white;
+
+    border:none;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:1rem;
+
+    font-weight:700;
+
+    transition:.3s;
+
+}
+
+.scan-stall-btn:hover{
+
+    background:#ff2b23;
+
+}
+.game-container{
+
+    width:100%;
+
+    margin-top:10px;
+
+}
+
+.clue-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.clue-description {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #d1d5db;
+    line-height: 1.5;
+}

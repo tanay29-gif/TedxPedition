@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "firebase": "^12.15.0",
+    "firebase-admin": "^14.2.0",
+    "html5-qrcode": "^2.3.8",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-qr-code": "^2.2.0",
     "react-router-dom": "^7.18.1"
   },
   "devDependencies": {

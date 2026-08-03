@@ -1,0 +1,12 @@
+{
+    "stallId": "STALL01",
+    "title": "Addition Challenge",
+    "type": "addition",
+    "description": "Solve the mathematical addition correctly.",
+    "question": "15 + 27",
+    "answer": 42,
+    "maxScore": 100,
+    "timeLimit": 300,
+    "successMessage": "Correct Answer!",
+    "failureMessage": "Wrong Answer. Try Again."
+}
