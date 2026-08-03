@@ -70,7 +70,7 @@ export default function ParticipantDashboard() {
           setLoading(false);
           return;
         }
-
+        console.log("Team Data:", teamData);
         setTeam(teamData);
 
         // 1. Listen to Team updates in Realtime
