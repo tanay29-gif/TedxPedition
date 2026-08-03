@@ -18,6 +18,11 @@ TEDxPedition is a modern, high-fidelity web application built to manage a hybrid
   - **Firebase Realtime Database (RTDB):** Ultra-low latency database for real-time tracking (live leaderboard, active team dashboards, admin control channels).
 - **Routing:** React Router v6 with custom Route Guards (Protected Routes) to handle role-based navigation.
 
+### 1.1. Environment Configuration (`.env`)
+The project relies on environment variables for database connections and security flags.
+- **Setup:** A `.env` file must be created in the **project root directory** by copying the keys from `.env.sample` and inserting the active credentials.
+- **Super Admin Initialization:** The primary Super Admin is not hardcoded in the database. Instead, setting the **`VITE_SUPER_ADMIN_EMAIL`** variable in `.env` establishes the master administrator. Any Google authenticated user whose email matches this value is automatically recognized as a Super Admin, granting them access to the `/super-admin` control portal to manage other staff members and event statuses.
+
 ---
 
 ## 2. Database Schema & Data Models
@@ -187,23 +192,38 @@ The authentication system is implemented via **Google Sign-in** and strictly res
       Dashboard           Dashboard               Dashboard             `/no-team`
 ```
 
-### Route Protection:
-All sensitive paths are locked behind `<ProtectedRoute>` checks. 
-- If a regular user attempts to visit `/admin` or `/super-admin`, they are redirected to `/`.
-- If an admin attempts to visit `/participant`, they are routed to their designated admin panel.
-- If a logged-in user does not belong to any team and is not an admin, they are blocked on the `/no-team` screen prompting them to go to the physical helpdesk.
+### Route Protection & Event State Filtering:
+All sensitive paths are locked behind `<ProtectedRoute>` checks. Additionally, the event state directly influences routing and view visibility:
+- **Admin Access:** If an authenticated user is determined to be an admin (either listed in `admin_users` or designated as a default Super Admin), they are routed to their respective dashboards (`/super-admin` or `/admin`). Admins are **never** blocked by the event state.
+- **Participant Access & Gating:** If a logged-in user is a registered Team Leader, they are directed to the Participant Dashboard (`/participant`). However, their access is gated by the event status:
+  - If the status is **`READY`**, the Team Leader's dashboard is locked behind a fullscreen overlay showing a high-fidelity "Waiting for Event Start" screen. No gameplay controls, timers, or QR scanners are rendered, preventing early play.
+  - Only when the status transitions to **`RUNNING`** does the participant dashboard unlock, dynamically revealing the active clue, timer, progress tracker, and scanner interface.
+  - If the status transitions to **`ENDED`**, participant interaction is immediately halted, and they are redirected to a final "Event Finished" screen.
+- **No-Team Redirect:** If a logged-in user does not belong to any team and is not registered as an admin, they are blocked on the `/no-team` screen prompting them to contact the physical registration desk.
 
 ---
 
 ## 4. Detailed Feature Breakdown & Flow
 
-### 4.1. Event Lifecycle Control (Super Admin)
-Super Admins have master authority over the event via the `/super-admin` portal.
-- **Event Status Engine:**
-  - `READY` State: Lock all participants on a static loading screen ("Waiting for Event Start"). Prevents early starts.
-  - `RUNNING` State: Unlocks dashboards and triggers game clocks.
-  - `ENDED` State: Immediately locks dashboards, records final times, stops active missions, and redirects participants to the final rankings page.
-- **Staff Administration:** Super Admins can add new Stall Admins, change their assigned stall numbers, or disable admin access on-the-fly.
+### 4.1. Event Lifecycle Control & Staffing (Super Admin)
+Super Admins hold absolute control over the platform via the `/super-admin` master portal. Their core responsibilities and features include:
+
+- **Admin Creation & Role Management:**
+  - Super Admins can add new system administrators dynamically by entering their name and email (enforcing the institutional `@iitgn.ac.in` domain restriction).
+  - They assign the admin's role: **Super Admin** (grants full system access) or **Stall Admin** (assigned to a specific mission, e.g., Stall 1 through 7).
+  - They can edit admin attributes or soft-delete them by toggling their `active` status to `inactive` on-the-fly, instantly terminating their access.
+
+- **Master Event Control Engine:**
+  - The Super Admin initiates and concludes the event, controlling the state machine (`READY` -> `RUNNING` -> `ENDED`) stored in Firestore (`event_status/current`) which is real-time synchronized to all connected clients.
+  - **Transitioning from `READY` to `RUNNING`:** 
+    1. During the prep phase, the state is set to `READY`. Team Leaders can sign in, but they are blocked on the "Waiting for Event Start" loader.
+    2. Once the briefing is complete, the Super Admin clicks **Start Event** in the portal.
+    3. The global state changes to `RUNNING`.
+    4. The real-time listener on all active participant devices triggers instantly, removing the waiting overlay and launching the gameplay interface.
+  - **Transitioning from `RUNNING` to `ENDED`:**
+    1. At the end of the duration, the Super Admin clicks **End Event** (confirming via a modal).
+    2. The state changes to `ENDED`.
+    3. All active participant dashboards freeze their game timers, disable scanner inputs, and display the final leaderboard links, bringing the treasure hunt to an orderly close.
 
 ### 4.2. Team Registration & Management
 - A team is registered in Firestore containing a designated **Team Leader** (using their IITGN email).
@@ -302,6 +322,9 @@ While the full architectural, database, routing, and verification systems are fu
 
 To rapidly bootstrap, reset, or test the environment, a set of administrative Node.js scripts is located under the `/scripts` directory.
 
+> [!WARNING]
+> **Execution Context Warning:** All seeding scripts must be executed **from the project root directory** (e.g. running `node scripts/createTeams.js` from the main project folder). The configuration module (`firebaseNode.js`) loads variables using `dotenv.config()`, which searches for the `.env` file in the current working directory. If you change directory into `/scripts` and attempt to run the scripts from there, the database connection credentials will fail to load, causing execution crashes.
+
 - **`firebaseNode.js`:** Initializes the Firebase Admin SDK in Node.js, reading secrets from environment variables.
 - **`createAdmins.js`:** Seeds initial Super Admin and Stall Admin accounts into the `admin_users` collection.
 - **`createTeams.js`:** Creates standard test teams (TEAM001 to TEAM010) with member lists and leader emails.
@@ -317,7 +340,7 @@ To rapidly bootstrap, reset, or test the environment, a set of administrative No
 ### 7.1. Database Reset / Initialization
 Before the event starts:
 1. Clear the Firestore collections (`teams`, `team_progress`, `admin_users`, `stalls`, `hints`, `qr_words`) and the Realtime Database nodes (`leaderboard`, `activeTeams`).
-2. Run the seeding scripts to initialize the data structures:
+2. Run the seeding scripts to initialize the data structures (**ensure you run them from the project root folder**):
    ```bash
    node scripts/createStalls.js
    node scripts/createHints.js
