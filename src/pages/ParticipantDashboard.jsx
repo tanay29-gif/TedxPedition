@@ -139,8 +139,6 @@ export default function ParticipantDashboard() {
         if (stallProg?.hintUsed) {
           const hintDoc = await getHint(currentStallId);
 
-          console.log("Hint document:", hintDoc);
-
           setHintText(hintDoc?.location || "Location unavailable");
         } else {
           setHintText("");
@@ -404,7 +402,6 @@ export default function ParticipantDashboard() {
           currentClue={currentClue}
           hintText={hintText}
           onUseHintClick={() => {
-            console.log("Hint button clicked");
             setIsHintOpen(true);
           }}
           handleLogout={handleLogout}
@@ -430,7 +427,6 @@ export default function ParticipantDashboard() {
         stallMeta={currentStallMeta}
         hintText={hintText}
         onUseHintClick={() => {
-          console.log("Hint button clicked");
           setIsHintOpen(true);
         }}
         onComplete={handleChallengeComplete}
