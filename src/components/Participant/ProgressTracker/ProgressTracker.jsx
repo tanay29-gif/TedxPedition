@@ -14,13 +14,6 @@ export default function ProgressTracker({
     currentStall,
     progress,
 }) {
-console.log("stalls:", stalls);
-console.log("progress:", progress);
-console.log("currentStall",currentStall);
-console.log("Combined",
-    stalls,
-    progress?.[currentStall]?.status
-);
     return (
 
         <section className="progress-card">
