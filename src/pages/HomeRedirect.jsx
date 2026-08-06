@@ -13,8 +13,8 @@ function HomeRedirect() {
         );
     }
     if (!user) {
-    return <Navigate to="/" replace />;
-    }
+    return <Navigate to="/home" replace />;
+}
 
     if (adminData) {
         if (
