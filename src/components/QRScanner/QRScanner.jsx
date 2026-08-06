@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import "./QRScanner.css";
 
-export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title = "Scan QR Code", placeholder = "Or enter code manually..." }) {
+export default function QRScanner({
+  onScanSuccess,
+  onScanFailure,
+  onClose,
+  title = "Scan QR Code",
+  placeholder = "Or enter code manually...",
+  manualAction,
+  setManualAction
+}) {
   const [manualCode, setManualCode] = useState("");
   const [error, setError] = useState("");
   const [scannerInitialized, setScannerInitialized] = useState(false);
@@ -69,8 +77,17 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
 
   const handleManualSubmit = (e) => {
     e.preventDefault();
+
     if (!manualCode.trim()) return;
-    onScanSuccess(manualCode.trim());
+
+    if (manualAction !== undefined) {
+      onScanSuccess({
+        id: manualCode.trim(),
+        action: manualAction,
+      });
+    } else {
+      onScanSuccess(manualCode.trim());
+    }
   };
 
   return (
@@ -78,7 +95,9 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
       <div className="qr-scanner-modal glass-card glow-red">
         <div className="qr-scanner-header">
           <h3>{title}</h3>
-          <button className="qr-close-btn" onClick={onClose}>&times;</button>
+          <button className="qr-close-btn" onClick={onClose}>
+            &times;
+          </button>
         </div>
 
         <div className="qr-scanner-body">
@@ -86,7 +105,9 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
             <div className="qr-camera-container">
               <div id="qr-reader-viewport"></div>
               <div className="scanner-laser-line"></div>
-              {!scannerInitialized && <div className="scanner-loading">Initializing camera...</div>}
+              {!scannerInitialized && (
+                <div className="scanner-loading">Initializing camera...</div>
+              )}
             </div>
           ) : (
             <div className="qr-camera-fallback">
@@ -98,6 +119,22 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
           <div className="qr-scanner-divider">
             <span>OR</span>
           </div>
+
+          {manualAction !== undefined && setManualAction && (
+            <div className="qr-action-selector">
+              <label>Action</label>
+
+              <select
+                value={manualAction}
+                onChange={(e) => setManualAction(e.target.value)}
+                className="qr-action-select"
+              >
+                <option value="START_CHALLENGE">Start Challenge</option>
+
+                <option value="FINISH_CHALLENGE">Finish Challenge</option>
+              </select>
+            </div>
+          )}
 
           <form onSubmit={handleManualSubmit} className="qr-manual-form">
             <input
@@ -113,8 +150,8 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
           </form>
 
           {cameraActive && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary toggle-camera-btn"
               onClick={() => setCameraActive(false)}
             >
@@ -122,8 +159,8 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
             </button>
           )}
           {!cameraActive && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary toggle-camera-btn"
               onClick={() => setCameraActive(true)}
             >

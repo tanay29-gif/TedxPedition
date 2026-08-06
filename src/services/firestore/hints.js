@@ -5,8 +5,6 @@ import {
 
 import { db } from "../../firebase/firebase";
 
-const hintsCollection = "hints";
-
 /**
  * Returns the hint document of a stall.
  */
@@ -14,34 +12,30 @@ const hintsCollection = "hints";
 export const getHint = async (stallId) => {
 
     try {
+        console.log("getHint called with:", stallId);
 
-        const hintRef = doc(db, hintsCollection, stallId);
+        const stallRef = doc(db, "stalls", stallId);
 
-        const snapshot = await getDoc(hintRef);
+        const snapshot = await getDoc(stallRef);
 
         if (!snapshot.exists()) {
 
-            console.log("Hint not found");
+            console.log("Stall not found");
 
             return null;
 
         }
-
+        console.log("Hint Location",  snapshot.data().location);
         return {
-
             id: snapshot.id,
-
-            ...snapshot.data()
-
+            location: snapshot.data().location
         };
 
-    }
+    } catch (error) {
 
-    catch (error) {
+        console.error("Error fetching stall location:", error);
 
-        console.error(error);
-
-        throw error;
+        return null;
 
     }
 

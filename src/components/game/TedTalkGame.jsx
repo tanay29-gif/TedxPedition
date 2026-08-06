@@ -4,7 +4,8 @@ import { db } from "../../firebase/firebase.js";
 import {
     doc,
     updateDoc,
-    increment
+    increment,
+    runTransaction
 } from "firebase/firestore";
 
 export default function TedTalkGame({
@@ -29,15 +30,14 @@ export default function TedTalkGame({
 
     // Random hint
     const randomHint = useMemo(() => {
-        return challenge.words[
-            Math.floor(Math.random() * challenge.words.length)
-        ];
+        return challenge.words[0];
     }, [challenge]);
 
     const [answer, setAnswer] = useState("");
     const [showHint, setShowHint] = useState(false);
     const [verified, setVerified] = useState(false);
     const [message, setMessage] = useState("");
+    const [coins, setCoins] = useState(team?.coins ?? 0);
 
     const verifySentence = () => {
 
@@ -74,10 +74,10 @@ export default function TedTalkGame({
 
         try {
 
-            const teamRef = doc(db, "teams", teamId);
+            const teamRef = doc(db, "teams", team.teamId);
 
             await updateDoc(teamRef, {
-                coins: increment(-game.coins)
+                coins: increment(game.coins)
             });
 
             onComplete();
@@ -108,7 +108,7 @@ export default function TedTalkGame({
 
                 }
 
-                const currentCoins =
+                let currentCoins =
                     teamSnap.data().coins || 0;
 
                 if (currentCoins <= 0) {
@@ -346,6 +346,9 @@ export default function TedTalkGame({
                                         {" "}
 
                                         {randomHint.word[0]}
+                                        <pre>
+                                            {JSON.stringify(randomHint, null, 2)}
+                                        </pre>
 
                                     </p>
 
