@@ -1,0 +1,534 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+    --bg: #070707;
+    --card: #121212;
+    --border: #2a2a2a;
+    --red: #EB0028;
+    --text: #ffffff;
+    --muted: #9b9b9b;
+    --success: #28d17c;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    background: #000;
+    color: white;
+}
+
+
+/* ===============================
+   MAIN
+================================ */
+
+.blockly-game {
+
+    min-height: 100vh;
+
+    width: 100%;
+
+    padding: 24px;
+
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(235,0,40,.12),
+            transparent 35%
+        ),
+        linear-gradient(
+            180deg,
+            #080808,
+            #000
+        );
+}
+
+
+/* ===============================
+   MAIN GRID
+   Blockly gets more space
+================================ */
+
+.blockly-layout {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(650px, 3.2fr)
+        minmax(280px, 1fr);
+
+    gap: 22px;
+
+    width:100%;
+
+    align-items:start;
+}
+
+
+/* ===============================
+   CARDS
+================================ */
+
+.blockly-workspace-card,
+.mission-card,
+.target-card,
+.rules-card,
+.preview-card,
+.status-card {
+
+    background:
+        rgba(18,18,18,.9);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius:18px;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.6);
+
+    overflow:hidden;
+
+}
+
+
+/* ===============================
+ HEADER
+================================ */
+
+.blockly-card-header {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:22px;
+
+}
+
+
+.blockly-card-header h2 {
+
+    font-size:24px;
+
+    font-weight:800;
+
+}
+
+
+.blockly-card-header p {
+
+    margin-top:8px;
+
+    color:var(--muted);
+
+}
+
+
+/* ===============================
+ ATTEMPTS
+================================ */
+
+.attempt-badge {
+
+    background:
+        rgba(235,0,40,.12);
+
+    border:
+        1px solid rgba(235,0,40,.4);
+
+    border-radius:12px;
+
+    padding:12px 18px;
+
+    text-align:center;
+
+}
+
+
+.attempt-badge span {
+
+    display:block;
+
+    font-size:24px;
+
+    color:var(--red);
+
+}
+
+
+/* ===============================
+ BLOCKLY WORKSPACE
+================================ */
+
+
+.workspace-wrapper {
+
+    width:100%;
+
+    padding:16px;
+
+}
+
+
+.blockly-workspace {
+
+    width:100%;
+
+    height:
+
+        min(75vh,720px);
+
+
+    min-height:500px;
+
+    border-radius:14px;
+
+    overflow:hidden;
+
+    border:
+
+        1px solid rgba(255,255,255,.1);
+
+    background:#1b1b1b;
+
+}
+
+
+/* Blockly SVG fix */
+
+.blocklySvg {
+
+    width:100% !important;
+
+    height:100% !important;
+
+}
+
+
+/* ===============================
+ BUTTONS
+================================ */
+
+
+.workspace-actions {
+
+    display:flex;
+
+    gap:14px;
+
+    padding:18px;
+
+}
+
+
+.workspace-actions button {
+
+    flex:1;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    border:none;
+
+    cursor:pointer;
+
+    font-weight:700;
+
+    font-size:15px;
+
+}
+
+
+.run-btn {
+
+    background:
+        linear-gradient(
+            135deg,
+            #EB0028,
+            #ff3b58
+        );
+
+    color:white;
+
+}
+
+
+.reset-btn {
+
+    background:#222;
+
+    color:white;
+
+    border:
+
+        1px solid #444 !important;
+
+}
+
+
+/* ===============================
+ MESSAGES
+================================ */
+
+.blockly-error,
+.blockly-success {
+
+    margin:18px;
+
+    padding:16px;
+
+    border-radius:12px;
+
+}
+
+
+.blockly-error {
+
+    background:
+        rgba(255,0,0,.12);
+
+}
+
+
+.blockly-success {
+
+    background:
+        rgba(40,209,124,.12);
+
+}
+
+
+/* ===============================
+ RIGHT PANEL
+================================ */
+
+
+.blockly-side-panel {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+
+.mission-card,
+.target-card,
+.rules-card,
+.preview-card,
+.status-card {
+
+    padding:20px;
+
+}
+
+
+.blockly-side-panel h3 {
+
+    font-size:20px;
+
+    margin-bottom:10px;
+
+}
+
+
+.blockly-side-panel p {
+
+    color:var(--muted);
+
+    line-height:1.6;
+
+}
+
+
+/* ===============================
+ TARGET IMAGE
+================================ */
+
+
+.target-preview {
+
+    margin-top:15px;
+
+    display:flex;
+
+    justify-content:center;
+
+}
+
+
+.ted-logo {
+
+    width:
+
+        min(80%,240px);
+
+}
+
+
+/* ===============================
+ PREVIEW
+================================ */
+
+
+.preview-placeholder {
+
+    height:180px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    border:
+
+        2px dashed rgba(255,255,255,.15);
+
+    border-radius:12px;
+
+    color:#888;
+
+}
+
+
+.preview-placeholder span {
+
+    font-size:38px;
+
+}
+
+
+/* ===============================
+ STATUS
+================================ */
+
+
+.status-item {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    padding:12px 0;
+
+    border-bottom:
+
+        1px solid rgba(255,255,255,.08);
+
+}
+
+
+.status-item strong {
+
+    color:var(--red);
+
+}
+
+
+/* ===============================
+ SCROLLBAR
+================================ */
+
+::-webkit-scrollbar {
+
+    width:8px;
+
+}
+
+
+::-webkit-scrollbar-thumb {
+
+    background:var(--red);
+
+    border-radius:20px;
+
+}
+
+
+/* ===============================
+ TABLET
+================================ */
+
+@media(max-width:1200px) {
+
+
+    .blockly-layout {
+
+        grid-template-columns:1fr;
+
+    }
+
+
+    .blockly-workspace {
+
+        height:65vh;
+
+    }
+
+
+}
+
+
+/* ===============================
+ MOBILE
+================================ */
+
+@media(max-width:700px) {
+
+
+    .blockly-game {
+
+        padding:10px;
+
+    }
+
+
+    .blockly-card-header {
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:15px;
+
+    }
+
+
+    .blockly-workspace {
+
+        height:55vh;
+
+        min-height:350px;
+
+    }
+
+
+    .workspace-actions {
+
+        flex-direction:column;
+
+    }
+
+
+    .blockly-side-panel {
+
+        gap:12px;
+
+    }
+
+
+}

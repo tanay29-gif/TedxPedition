@@ -26,7 +26,7 @@ export const getTeamByLeaderEmail = async (email) => {
 
         const q = query(
             teamsCollection,
-            where("leader.email", "==", email)
+            where("leaderEmail", "==", email)
         );
 
         const snapshot = await getDocs(q);

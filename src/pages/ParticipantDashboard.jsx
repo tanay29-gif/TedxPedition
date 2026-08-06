@@ -6,11 +6,19 @@ import { db } from "../firebase/firebase";
 import { logout } from "../services/auth";
 import { getHint } from "../services/firestore/hints";
 import { markHintUsed } from "../services/firestore/progress";
-import { getStallKey, getStallNumber, getStallProgressValue } from "../services/firestore/stallKeys";
-import { getStallByOrder } from "../services/firestore/stalls";
+import {
+  getStallKey,
+  getStallNumber,
+  getStallProgressValue,
+} from "../services/firestore/stallKeys";
+import { getStallByOrder, getStallById } from "../services/firestore/stalls";
 import { getTeamByLeaderEmail, updateTeam } from "../services/firestore/teams";
-import { loadClue } from "../services/clues/clueLoader";
-import { validateScannedStall, startMission, finishMission } from "../services/stalls/stallService";
+// import { loadClue } from "../services/clues/clueLoader";
+import {
+  validateScannedStall,
+  startMission,
+  finishMission,
+} from "../services/stalls/stallService";
 import { subscribeEventStatus } from "../services/event/eventService";
 
 import HintDialog from "../components/HintDialog/HintDialog";
@@ -26,7 +34,8 @@ import ValidationDialog from "../components/Participant/ValidationDialog/Validat
 import ChallengePage from "./ChallengePage";
 import FinalLocation from "./FinalLocation";
 import FinishPage from "./FinishPage";
-import WaitingForVerificationPage from "./WaitingForVerificationPage";
+import TravelPage from "../components/Participant/TravelPage";
+// import WaitingForVerificationPage from "./WaitingForVerificationPage";
 
 import "./ParticipantDashboard.css";
 
@@ -38,15 +47,12 @@ export default function ParticipantDashboard() {
   const [progress, setProgress] = useState(null);
   const [currentStallMeta, setCurrentStallMeta] = useState(null);
   const [currentClue, setCurrentClue] = useState(null);
-  const [validationResult, setValidationResult] = useState(null);
   const [hintText, setHintText] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Reusable Component states
   const [isTeamQROpen, setIsTeamQROpen] = useState(false);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isHintOpen, setIsHintOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [eventState, setEventState] = useState(null);
 
   useEffect(() => {
@@ -70,26 +76,31 @@ export default function ParticipantDashboard() {
           setLoading(false);
           return;
         }
-
+        console.log("Team Data:", teamData);
         setTeam(teamData);
 
         // 1. Listen to Team updates in Realtime
-        unsubscribeTeam = onSnapshot(doc(db, "teams", teamData.id), (docSnap) => {
-          if (docSnap.exists()) {
-            setTeam({ id: docSnap.id, ...docSnap.data() });
-          }
-        });
+        unsubscribeTeam = onSnapshot(
+          doc(db, "teams", teamData.id),
+          (docSnap) => {
+            if (docSnap.exists()) {
+              setTeam({ id: docSnap.id, ...docSnap.data() });
+            }
+          },
+        );
 
         // 2. Listen to Team Progress updates in Realtime
-        unsubscribeProgress = onSnapshot(doc(db, "team_progress", teamData.id), (docSnap) => {
-          if (docSnap.exists()) {
-            setProgress(docSnap.data());
-          } else {
-            setProgress({});
-          }
-          setLoading(false);
-        });
-
+        unsubscribeProgress = onSnapshot(
+          doc(db, "team_progress", teamData.id),
+          (docSnap) => {
+            if (docSnap.exists()) {
+              setProgress(docSnap.data());
+            } else {
+              setProgress({});
+            }
+            setLoading(false);
+          },
+        );
       } catch (err) {
         console.error("Error setting up real-time listeners:", err);
         setLoading(false);
@@ -106,28 +117,36 @@ export default function ParticipantDashboard() {
 
   // Load Stall Metadata & Clue when currentStall changes
   useEffect(() => {
-    const currentStallNum = getStallNumber(team?.currentStall);
-    if (!currentStallNum) return;
+    const currentStallId = team?.currentStall;
+
+    if (!currentStallId) return;
 
     const fetchStallMeta = async () => {
       try {
-        const stallMeta = await getStallByOrder(currentStallNum);
+        const stallMeta = await getStallById(currentStallId);
         setCurrentStallMeta(stallMeta);
 
-        // Fetch clue data
-        const stallKey = getStallKey(currentStallNum);
-        const clueData = await loadClue(stallKey);
-        setCurrentClue(clueData);
+        // const clueData = await getClue(currentStallId);
 
-        const stallProg = getStallProgressValue(progress, currentStallNum);
+        setCurrentClue({
+          title: stallMeta.clueTitle,
+          description: stallMeta.clueDescription,
+          clue: stallMeta.clue,
+          location: stallMeta.location,
+        });
+        const stallProg = getStallProgressValue(progress, currentStallId);
+
         if (stallProg?.hintUsed) {
-          const hintDoc = await getHint(getStallKey(currentStallNum));
-          setHintText(hintDoc?.hintText || `Hint for Stall ${currentStallNum}`);
+          const hintDoc = await getHint(currentStallId);
+
+          console.log("Hint document:", hintDoc);
+
+          setHintText(hintDoc?.location || "Location unavailable");
         } else {
           setHintText("");
         }
       } catch (err) {
-        console.error("Error fetching stall metadata or clue:", err);
+        console.error("Error fetching stall metadata:", err);
       }
     };
 
@@ -139,55 +158,11 @@ export default function ParticipantDashboard() {
     navigate("/", { replace: true });
   };
 
-  // Participant scans a QR Code to unlock a stall
-  const handleStallQRScan = async (scannedCode) => {
-    setErrorMsg("");
-
-    const expectedStallId = team?.currentStall || "STALL01";
-    const validation = validateScannedStall(scannedCode, expectedStallId);
-
-    setValidationResult(validation);
-
-    if (validation.valid) {
-      // Correct QR Code - Close scanner first, show correct screen, wait, then trigger startMission
-      setIsScannerOpen(false);
-      setTimeout(async () => {
-        try {
-          const expectedStallNum = getStallNumber(expectedStallId);
-          await startMission(team.id, expectedStallNum);
-          setValidationResult(null);
-        } catch (err) {
-          console.error("Failed to start mission:", err);
-          setErrorMsg("Error starting challenge in database. Please retry.");
-          setValidationResult(null);
-        }
-      }, 1500);
-    } else {
-      // Wrong QR Code - Close scanner to stop camera and display the ValidationDialog
-      setIsScannerOpen(false);
-    }
-  };
-
-  const handleCloseValidationDialog = () => {
-    const wasWrong = validationResult && !validationResult.valid;
-    setValidationResult(null);
-    if (wasWrong) {
-      setIsScannerOpen(true);
-    }
-  };
-
-  const handleChallengeComplete = async () => {
-    try {
-      const currentStallNum = getStallNumber(team.currentStall);
-      await finishMission(team.id, currentStallNum);
-    } catch (err) {
-      console.error("Failed to complete challenge:", err);
-      alert("Failed to submit challenge. Please try again.");
-    }
-  };
+  const handleChallengeComplete = async () => {};
 
   // Spend Hint Coin logic
   const handleUseHintConfirm = async () => {
+    console.log("handleUseHintConfirm");
     if (!team || team.coins <= 0) return;
 
     try {
@@ -201,7 +176,8 @@ export default function ParticipantDashboard() {
 
       // 3. Fetch hint content
       const hintDoc = await getHint(getStallKey(team.currentStall));
-      const text = hintDoc?.hintText || `Solve the clue at the stall to move forward!`;
+      const text =
+        hintDoc?.location || `Solve the clue at the stall to move forward!`;
       setHintText(text);
       setIsHintOpen(false);
     } catch (err) {
@@ -223,8 +199,14 @@ export default function ParticipantDashboard() {
     return (
       <div className="dashboard-error-screen glass-card glow-red">
         <h2>No Team Registered</h2>
-        <p>Your account ({user?.email}) is not associated with any registered team for TEDxpedition.</p>
-        <p>Please contact the event organizers at the registration desk to register your team.</p>
+        <p>
+          Your account ({user?.email}) is not associated with any registered
+          team for TEDxpedition.
+        </p>
+        <p>
+          Please contact the event organizers at the registration desk to
+          register your team.
+        </p>
         <button onClick={handleLogout} className="btn btn-primary">
           Log Out
         </button>
@@ -243,16 +225,51 @@ export default function ParticipantDashboard() {
 
   if (eventState.status === "READY") {
     return (
-      <div className="dashboard-loading-screen event-state-screen ready-state" style={{ textAlign: 'center', gap: '30px' }}>
-        <div className="tedx-brand-glow" style={{ fontSize: '3rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>
-          TED<span style={{ color: 'var(--primary-red)' }}>X</span>pedition
+      <div
+        className="dashboard-loading-screen event-state-screen ready-state"
+        style={{ textAlign: "center", gap: "30px" }}
+      >
+        <div
+          className="tedx-brand-glow"
+          style={{
+            fontSize: "3rem",
+            fontWeight: "800",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+          }}
+        >
+          TED<span style={{ color: "var(--primary-red)" }}>X</span>pedition
         </div>
-        <div className="spinner" style={{ borderColor: 'var(--primary-red) transparent transparent transparent' }}></div>
-        <h2 style={{ color: 'var(--text-white)' }}>Waiting for Event Start</h2>
-        <p style={{ color: 'var(--text-grey)', maxWidth: '400px', margin: '0 auto', fontSize: '1.1rem' }}>
-          The hunt hasn't started yet. Please wait for the coordinators to launch the event.
+        <div
+          className="spinner"
+          style={{
+            borderColor:
+              "var(--primary-red) transparent transparent transparent",
+          }}
+        ></div>
+        <h2 style={{ color: "var(--text-white)" }}>Waiting for Event Start</h2>
+        <p
+          style={{
+            color: "var(--text-grey)",
+            maxWidth: "400px",
+            margin: "0 auto",
+            fontSize: "1.1rem",
+          }}
+        >
+          The hunt hasn't started yet. Please wait for the coordinators to
+          launch the event.
         </p>
-        <button onClick={handleLogout} className="btn btn-accent logout-btn" style={{ marginTop: '20px', padding: '10px 24px', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-white)' }}>
+        <button
+          onClick={handleLogout}
+          className="btn btn-accent logout-btn"
+          style={{
+            marginTop: "20px",
+            padding: "10px 24px",
+            backgroundColor: "transparent",
+            border: "1px solid var(--border-color)",
+            color: "var(--text-white)",
+          }}
+        >
           Log Out
         </button>
       </div>
@@ -261,20 +278,75 @@ export default function ParticipantDashboard() {
 
   if (eventState.status === "ENDED") {
     return (
-      <div className="dashboard-loading-screen event-state-screen ended-state" style={{ textAlign: 'center', gap: '30px' }}>
-        <div className="tedx-brand-glow" style={{ fontSize: '3rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>
-          TED<span style={{ color: 'var(--primary-red)' }}>X</span>pedition
+      <div
+        className="dashboard-loading-screen event-state-screen ended-state"
+        style={{ textAlign: "center", gap: "30px" }}
+      >
+        <div
+          className="tedx-brand-glow"
+          style={{
+            fontSize: "3rem",
+            fontWeight: "800",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+          }}
+        >
+          TED<span style={{ color: "var(--primary-red)" }}>X</span>pedition
         </div>
-        <div style={{ fontSize: '4rem' }}>🏁</div>
-        <h2 style={{ color: 'var(--primary-red)', fontSize: '2.5rem', fontWeight: '800' }}>Event Finished</h2>
-        <p style={{ color: 'var(--text-grey)', maxWidth: '500px', margin: '0 auto', fontSize: '1.2rem', lineHeight: '1.6' }}>
-          TEDxpedition has officially concluded. Thank you for scanning, solving, and participating!
+        <div style={{ fontSize: "4rem" }}>🏁</div>
+        <h2
+          style={{
+            color: "var(--primary-red)",
+            fontSize: "2.5rem",
+            fontWeight: "800",
+          }}
+        >
+          Event Finished
+        </h2>
+        <p
+          style={{
+            color: "var(--text-grey)",
+            maxWidth: "500px",
+            margin: "0 auto",
+            fontSize: "1.2rem",
+            lineHeight: "1.6",
+          }}
+        >
+          TEDxpedition has officially concluded. Thank you for scanning,
+          solving, and participating!
         </p>
-        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-          <Link to="/leaderboard" className="btn btn-secondary leaderboard-btn" style={{ padding: '12px 24px', backgroundColor: 'var(--primary-red)', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold' }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "15px",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
+        >
+          <Link
+            to="/leaderboard"
+            className="btn btn-secondary leaderboard-btn"
+            style={{
+              padding: "12px 24px",
+              backgroundColor: "var(--primary-red)",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "8px",
+              fontWeight: "bold",
+            }}
+          >
             📊 View Leaderboard
           </Link>
-          <button onClick={handleLogout} className="btn btn-accent logout-btn" style={{ padding: '12px 24px', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-white)' }}>
+          <button
+            onClick={handleLogout}
+            className="btn btn-accent logout-btn"
+            style={{
+              padding: "12px 24px",
+              backgroundColor: "transparent",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-white)",
+            }}
+          >
             Log Out
           </button>
         </div>
@@ -284,34 +356,71 @@ export default function ParticipantDashboard() {
 
   const currentStallNum = getStallNumber(team.currentStall);
   const stallProgress = getStallProgressValue(progress, currentStallNum);
-  
+
   // Game finished completely (all 7 stages done)
-  if (currentStallNum > 7 || (currentStallNum === 7 && getStallProgressValue(progress, 7)?.status === "COMPLETED")) {
-    return <FinishPage team={team} progress={progress} handleLogout={handleLogout} />;
+  if (
+    currentStallNum > 7 ||
+    (currentStallNum === 7 &&
+      getStallProgressValue(progress, 7)?.status === "COMPLETED")
+  ) {
+    return (
+      <FinishPage team={team} progress={progress} handleLogout={handleLogout} />
+    );
   }
 
   // Active view routing based on game state
   // Stall 7 is Final Location stage
   if (currentStallNum === 7) {
-    return <FinalLocation team={team} progress={progress} handleLogout={handleLogout} />;
-  }
-
-  const currentStallStatus = stallProgress?.status || "READY";
-
-  // State: Finished playing, waiting for admin approval
-  if (currentStallStatus === "VERIFYING") {
     return (
-      <WaitingForVerificationPage
+      <FinalLocation
         team={team}
-        stallNum={currentStallNum}
-        stallProgress={stallProgress}
+        progress={progress}
         handleLogout={handleLogout}
       />
     );
   }
 
+  const currentStallStatus = stallProgress?.status || "READY";
+
+  // State: Finished playing, waiting for admin approval
+  // if (currentStallStatus === "VERIFYING") {
+  //   return (
+  //     <WaitingForVerificationPage
+  //       team={team}
+  //       stallNum={currentStallNum}
+  //       stallProgress={stallProgress}
+  //       handleLogout={handleLogout}
+  //     />
+  //   );
+  // }
+
+  // State: Travelling to next stall
+  if (currentStallStatus === "TRAVELLING") {
+    return (
+      <>
+        <TravelPage
+          team={team}
+          currentStallNum={currentStallNum}
+          currentClue={currentClue}
+          hintText={hintText}
+          onUseHintClick={() => {
+            console.log("Hint button clicked");
+            setIsHintOpen(true);
+          }}
+          handleLogout={handleLogout}
+        />
+        <HintDialog
+          isOpen={isHintOpen}
+          coins={team.coins}
+          onConfirm={handleUseHintConfirm}
+          onClose={() => setIsHintOpen(false)}
+        />
+      </>
+    );
+  }
+
   // State: Started playing, active challenge screen
-  if (currentStallStatus === "PLAYING") {
+  if (currentStallStatus === "PLAYING" && team) {
     return (
       <ChallengePage
         team={team}
@@ -320,7 +429,10 @@ export default function ParticipantDashboard() {
         stallProgress={stallProgress}
         stallMeta={currentStallMeta}
         hintText={hintText}
-        onUseHintClick={() => setIsHintOpen(true)}
+        onUseHintClick={() => {
+          console.log("Hint button clicked");
+          setIsHintOpen(true);
+        }}
         onComplete={handleChallengeComplete}
         handleLogout={handleLogout}
       />
@@ -330,16 +442,26 @@ export default function ParticipantDashboard() {
   // State: Default dashboard / Reach stall Clue page (Not started yet)
   const hintUnlocked = !!hintText || !!stallProgress?.hintUsed;
   const statusLabel = currentStallStatus;
-  const cardStatusClass = currentStallStatus === "PLAYING" ? "playing" : "waiting";
+  const cardStatusClass =
+    currentStallStatus === "PLAYING" ? "playing" : "waiting";
+
+  const allStallsCompleted = Object.keys(progress || {}).every(
+      (stall) => progress[stall]?.status === "COMPLETED"
+  );
 
   return (
     <div className="participant-dashboard">
       <header className="dashboard-header">
         <div className="header-branding">
-          <h2>TED<span>X</span>pedition</h2>
+          <h2>
+            TED<span>X</span>pedition
+          </h2>
         </div>
         <div className="header-actions">
-          <Link to="/test/leaderboard" className="btn btn-secondary leaderboard-btn">
+          <Link
+            to="/test/leaderboard"
+            className="btn btn-secondary leaderboard-btn"
+          >
             📊 Leaderboard
           </Link>
           <button onClick={handleLogout} className="btn btn-accent logout-btn">
@@ -348,10 +470,18 @@ export default function ParticipantDashboard() {
         </div>
       </header>
 
+      {allStallsCompleted && (
+        <div className="completion-message">
+          Congratulations!
+          <br />
+          You have successfully completed all missions.
+        </div>
+      )}
+
       <main className="dashboard-content">
         <section className="team-status-grid">
           <TeamMembersCard team={team} />
-          <HintCard
+          {/* <HintCard
             coins={team.coins}
             hintUnlocked={hintUnlocked}
             hintText={hintText}
@@ -362,12 +492,10 @@ export default function ParticipantDashboard() {
             clue={currentClue}
             status={statusLabel}
             onScanQR={() => setIsScannerOpen(true)}
-          />
+          /> */}
         </section>
 
         <section className="glass-card active-stall-card glow-red pulsing-border">
-          {errorMsg && <div className="scanner-error-box">⚠️ {errorMsg}</div>}
-
           <TimeCard
             startedAt={stallProgress?.startedAt}
             endedAt={stallProgress?.endedAt}
@@ -389,22 +517,9 @@ export default function ParticipantDashboard() {
       </main>
 
       {/* Dialog Modals */}
-      {isScannerOpen && (
-        <QRScanner
-          title="Scan Stall QR"
-          placeholder="Enter code manually..."
-          onScanSuccess={handleStallQRScan}
-          onClose={() => {
-            setIsScannerOpen(false);
-            setErrorMsg("");
-          }}
-        />
-      )}
+
       {isTeamQROpen && (
-        <TeamQR
-            team={team}
-            onClose={() => setIsTeamQROpen(false)}
-        />
+        <TeamQR team={team} onClose={() => setIsTeamQROpen(false)} />
       )}
 
       <HintDialog
@@ -412,12 +527,6 @@ export default function ParticipantDashboard() {
         coins={team.coins}
         onConfirm={handleUseHintConfirm}
         onClose={() => setIsHintOpen(false)}
-      />
-
-      <ValidationDialog
-        isOpen={validationResult !== null}
-        result={validationResult}
-        onClose={handleCloseValidationDialog}
       />
     </div>
   );

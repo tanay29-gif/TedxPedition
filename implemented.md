@@ -34,10 +34,11 @@ To optimize performance and minimize Firebase reads/costs, the system uses a **h
 #### `admin_users`
 Stores configuration details and credentials for admins. The document ID is the admin's email address.
 ```json
+super_admin
 {
   "name": "Jane Doe",
   "email": "janedoe@iitgn.ac.in",
-  "role": "stall_admin", // "stall_admin" | "super_admin"
+  "role": "stall_admin", // "stall_admin" | "Super Admin"
   "stallAssigned": "STALL03", // "STALL01" to "STALL07", or "All" for Super Admins
   "active": true,
   "createdAt": "Timestamp",
@@ -55,6 +56,16 @@ Stores overall team profiles, current location, and overall metrics. Document ID
   "coins": 3, // Remaining Hint Coins (starts at 3, decrements on hint use)
   "currentStall": "STALL01", // "STALL01" to "STALL07"
   "totalScore": 0,
+  "stallSequence":[
+        "STALL03",
+        "STALL01",
+        "STALL06",
+        "STALL05",
+        "STALL07",
+        "STALL04",
+        "STALL02"
+    ],
+
   "totalTime": 0, // Total seconds taken across completed stalls
   "members": ["Member 1", "Member 2", "Member 3"],
   "createdAt": "Timestamp",
@@ -67,7 +78,7 @@ Stores detailed stall-by-stall tracking for each team. The document ID matches t
 ```json
 {
   "STALL01": {
-    "status": "COMPLETED", // "READY" | "PLAYING" | "VERIFYING" | "COMPLETED"
+    "status": "COMPLETED", // "READY" | "PLAYING" | "COMPLETED"
     "startedAt": "Timestamp",
     "endedAt": "Timestamp",
     "timeTaken": 142, // seconds
@@ -121,15 +132,6 @@ Contains the solutions/hints unlocked when teams spend a coin. Document ID match
 }
 ```
 
-#### `qr_words`
-Stores correct words associated with QR Codes scanned during the Stall 2 Slogan Hunt. Document ID is `QR001` to `QR006`.
-```json
-{
-  "qrId": "QR001",
-  "talkId": "TALK1",
-  "word": "Ideas"
-}
-```
 
 ---
 
@@ -160,6 +162,15 @@ Used by Stall Admins to see real-time queues at their station.
 }
 ```
 
+#### `qr_words`
+Stores correct words associated with QR Codes scanned during the Stall 2 Slogan Hunt. Document ID is `QR001` to `QR006`.
+```json
+{
+  "qrId": "QR001",
+  "talkId": "TALK1",
+  "word": "Ideas"
+}
+```
 ---
 
 ## 3. Authentication & Access Control Flow

@@ -63,15 +63,11 @@ export default function ActiveTeamsTable({
                     <thead>
 
                         <tr>
-
                             <th>Team</th>
-
                             <th>Current Stall</th>
-
+                            <th>Coins</th>
                             <th>Status</th>
-
                             <th>Action</th>
-
                         </tr>
 
                     </thead>
@@ -126,23 +122,22 @@ export default function ActiveTeamsTable({
                                         </div>
 
                                     </td>
-
                                     <td>
-
                                         Stall {team.currentStall}
-
                                     </td>
 
                                     <td>
+                                        <span className="coins-badge">
+                                            🪙 {Math.max(0, Number(meta.coins ?? 0))}
+                                        </span>
+                                    </td>
 
+                                    <td>
                                         <span
                                             className={`status ${team.status.toLowerCase()}`}
                                         >
-
                                             {team.status}
-
                                         </span>
-
                                     </td>
 
                                     <td>

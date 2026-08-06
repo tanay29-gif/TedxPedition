@@ -1,44 +1,68 @@
-export default function OfflineGame({
-    game,
-    onComplete,
-}) {
+import "./OfflineGame.css";
 
-    if (!game) return null;
+export default function OfflineGame({ game, onComplete }) {
+  if (!game) return null;
 
-    const finishChallenge = () => {
+const finishChallenge = () => {
+  if (onComplete) {
+    onComplete();
+  }
+};
 
-        onComplete({
-            correct: true,
-            score: game.maxScore,
-            message: game.successMessage,
-        });
+return (
+  <div className="ted-page">
+    <div className="ted-container">
 
-    };
+      <div className="ted-hero">
 
-    return (
+        <span className="ted-tag">
+          OFFLINE CHALLENGE
+        </span>
 
-        <div className="game-card">
+        <h1>{game.title}</h1>
 
-            <h2>{game.title}</h2>
+        <p>
+          This challenge must be completed physically at the stall.
+          Work together with your teammates and ask the volunteer for
+          verification once you have finished.
+        </p>
 
-            <p>{game.description}</p>
+      </div>
 
-            <p>
+      <section className="ted-section">
 
-                {game.instruction}
+        <h3>Challenge Description</h3>
 
-            </p>
+        <div className="ted-box">
+          <p>{game.description}</p>
+        </div>
 
-            <button
-                onClick={finishChallenge}
-            >
+      </section>
 
-                Finish Challenge
+      <section className="ted-section">
 
-            </button>
+        <div className="finish-card">
+
+          <h2>Volunteer Verification Required</h2>
+
+          <p>
+            Once your team completes the challenge, show it to the TEDx
+            volunteer stationed here. After successful verification,
+            your next challenge will be unlocked.
+          </p>
+
+          <button
+            className="finish-button"
+            onClick={finishChallenge}
+          >
+            Finish Challenge
+          </button>
 
         </div>
 
-    );
+      </section>
 
+    </div>
+  </div>
+);
 }
