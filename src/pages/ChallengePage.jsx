@@ -16,12 +16,11 @@ export default function ChallengePage({
   hintText,
   onUseHintClick,
   onComplete,
-  handleLogout
+  handleLogout,
 }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-
 
   const qrData = JSON.stringify({
     v: 1,
@@ -32,7 +31,6 @@ export default function ChallengePage({
 
   const isOfflineGame = stallMeta?.type === "OFFLINE";
 
-
   // --- Common Submit ---
   const handleFinishStall = () => {
     setError("");
@@ -40,20 +38,26 @@ export default function ChallengePage({
 
     // Only online games should automatically finish
     if (!isOfflineGame && onComplete) {
-    onComplete();
-  }
+      onComplete();
+    }
   };
 
   return (
     <div className="challenge-page">
       <header className="challenge-header">
         <div className="header-info">
-          <span className="badge">{stallIdToMission(stallNum).toUpperCase()} ACTIVE</span>
-          <h2>{stallMeta?.name || `${stallIdToMission(stallNum)} Challenge`}</h2>
+          <span className="badge">
+            {stallIdToMission(stallNum).toUpperCase()} ACTIVE
+          </span>
+          <h2>
+            {stallMeta?.name || `${stallIdToMission(stallNum)} Challenge`}
+          </h2>
         </div>
         <div className="header-status">
           <Timer startedAt={stallProgress?.startedAt} />
-          <button onClick={handleLogout} className="btn btn-accent">Log Out</button>
+          <button onClick={handleLogout} className="btn btn-accent">
+            Log Out
+          </button>
         </div>
       </header>
 
@@ -71,7 +75,6 @@ export default function ChallengePage({
             setError={setError}
           />
           <div className="challenge-sidebar">
-
             {error && (
               <div className="challenge-error-box animate-shake">
                 ⚠️ {error}
@@ -83,9 +86,9 @@ export default function ChallengePage({
                 <h3>🎉 Challenge Completed!</h3>
 
                 <p className="success-message">
-                  Proceed to the Stall Administrator and present your Team QR Code.
-                  Your timer will stop only after the admin scans your QR and verifies
-                  your completion.
+                  Proceed to the Stall Administrator and present your Team QR
+                  Code. Your timer will stop only after the admin scans your QR
+                  and verifies your completion.
                 </p>
 
                 <div className="team-qr-container">
@@ -105,17 +108,11 @@ export default function ChallengePage({
                     />
                   </div>
                   <div className="team-qr-details">
-                    <span className="team-qr-label">
-                      Team Verification ID
-                    </span>
+                    <span className="team-qr-label">Team Verification ID</span>
 
-                    <div className="team-qr-id">
-                      {team.teamId}
-                    </div>
+                    <div className="team-qr-id">{team.teamId}</div>
 
-                    <div className="team-qr-name">
-                      {team.teamName}
-                    </div>
+                    <div className="team-qr-name">{team.teamName}</div>
                   </div>
                 </div>
 
@@ -128,7 +125,10 @@ export default function ChallengePage({
             {/* Show only for ONLINE challenges */}
             {!isOfflineGame && (
               <>
-                <div className="glass-card clue-panel">
+                <div
+                  className="glass-card clue-panel"
+                  style={{ marginTop: "30px" }}
+                >
                   <h4>Mission Clue</h4>
 
                   <p>
@@ -137,7 +137,7 @@ export default function ChallengePage({
                   </p>
                 </div>
 
-                <div className="glass-card hint-panel">
+                {/* <div className="glass-card hint-panel">
                   <h4>Mission Hint</h4>
 
                   {hintText ? (
@@ -151,7 +151,7 @@ export default function ChallengePage({
                       </p>
                     </div>
                   ) : (
-                    <div className="hint-request">
+                    <div className="hint-request" >
                       <p>
                         Stuck on this mission? Use a Hint Coin to unlock a clue.
                       </p>
@@ -164,10 +164,9 @@ export default function ChallengePage({
                       </button>
                     </div>
                   )}
-                </div>
+                </div> */}
               </>
             )}
-
           </div>
         </section>
       </main>

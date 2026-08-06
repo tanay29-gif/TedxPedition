@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   //for the leaderboard preview
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [manualAction, setManualAction] = useState("START_CHALLENGE");
 
   // Selected Stall Admin State
   const [selectedStallNum, setSelectedStallNum] = useState(1);
@@ -308,9 +309,15 @@ const handleTeamQRScan = async (scannedCode) => {
     }
 
     setIsScannerOpen(false);
-  } catch (err) {
+    } catch (err) {
     console.error(err);
-    setErrorMsg(err.message || "Error communicating with database.");
+
+    const message =
+      err.message || "Error communicating with database.";
+
+    alert(message);
+
+    setErrorMsg(message);
   }
 };
 
@@ -331,10 +338,10 @@ const handleTeamQRScan = async (scannedCode) => {
       console.log("Team data", teamData);
       setSelectedTeam(teamData);
       setSelectedTeamProgress(progressData);
-      setSelectedTeamStallProgress(stallProg);
+      setSelectedTeamStallProgress(stallProgress);
 
       // Calculate bonus based on the participant's completed timeTaken
-      const timeTaken = stallProg.timeTaken || 0;
+      const timeTaken = stallProgress.timeTaken || 0;
       const systemBonus = calculateBonus(timeTaken);
 
       // Default score values
@@ -499,6 +506,8 @@ const playingTeams = Object.values(activeTeamsList).filter(team => {
         <QRScanner
           title={`Scan Team QR (Stall ${selectedStallNum})`}
           placeholder="Enter Team ID (e.g. TEAM001)"
+          manualAction={manualAction}
+          setManualAction={setManualAction}
           onScanSuccess={handleTeamQRScan}
           onClose={() => {
             setIsScannerOpen(false);
