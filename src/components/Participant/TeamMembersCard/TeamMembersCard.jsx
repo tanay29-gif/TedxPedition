@@ -7,7 +7,7 @@ export default function TeamMembersCard({
     if (!team) return null;
 
     const leaderName = team.leader?.name || team.leader?.email || team.leader?.displayName || "Team Leader";
-    const leaderEmail = team.leader?.email || "";
+    const leaderEmail = team.leaderEmail || "";
     const members = Array.isArray(team.members)
         ? team.members.map((member) => {
             if (typeof member === "string") {

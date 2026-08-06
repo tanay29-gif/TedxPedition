@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const unsubscribe = authListener(async (firebaseUser) => {
+            setLoading(true); 
             if (firebaseUser) {
                 setUser(firebaseUser);
                 try {
@@ -52,6 +53,7 @@ export function AuthProvider({ children }) {
                     if (!admin) {
                         const team = await getTeamByLeaderEmail(firebaseUser.email);
                         setTeamData(team);
+                        console.log("Team Data:", team);
                     } else {
                         setTeamData(null);
                     }

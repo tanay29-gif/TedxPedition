@@ -2,9 +2,11 @@ import AdditionGame from "./AdditionGame";
 import BlocklyGame from "./BlocklyGame";
 import OfflineGame from "./OfflineGame";
 import TypingGame from "./TypingGame";
+import TedTalkGame from "./TedTalkGame";
 
 const GameRenderer = ({
     game,
+    team,
     stallNum,
     onComplete,
     success,
@@ -13,43 +15,29 @@ const GameRenderer = ({
     setError,
 }) => {
 
-    if (!game && stallNum === 1) {
-        return (
-            <BlocklyGame
-                success={success}
-                setSuccess={setSuccess}
-                error={error}
-                setError={setError}
-                onComplete={onComplete}
-            />
-        );
-    }
-
-    if (!game) {
-        return (
-            <div className="game-loading">
-                Loading Game...
-            </div>
-        );
-    }
-
     switch (game.type) {
 
-        case "addition":
-            return (
-                <AdditionGame
-                    game={game}
-                    onComplete={onComplete}
-                />
-            );
+        case "blockly":
+    return (
+        <BlocklyGame
+            game={game}
+            success={success}
+            setSuccess={setSuccess}
+            error={error}
+            setError={setError}
+            onComplete={onComplete}
+        />
+    );
 
-        case "word":
-            return (
-                <TypingGame
-                    game={game}
-                    onComplete={onComplete}
-                />
-            );
+case "ted-talk":
+    return (
+        <TedTalkGame
+    game={game}
+    team={team}
+    onComplete={onComplete}
+/>
+    );
+
 
         case "offline":
             return (

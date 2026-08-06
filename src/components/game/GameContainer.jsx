@@ -24,6 +24,7 @@ const GameContainer = ({
 
                 setLoading(true);
 
+                console.log("Loading game for stallId:", stallId);
                 const gameData = await loadGame(stallId);
 
                 if (!gameData) {

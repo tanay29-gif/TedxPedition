@@ -14,11 +14,11 @@ function HomeRedirect() {
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/register" replace />;
     }
 
     if (adminData) {
-        if (adminData.role === "Super Admin") {
+        if (adminData.role === "Super Admin" || adminData.role === "stall_admin") {
             return <Navigate to="/super-admin" replace />;
         }
         return <Navigate to="/admin" replace />;
