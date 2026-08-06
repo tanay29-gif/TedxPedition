@@ -14,7 +14,7 @@ function HomeRedirect() {
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/register" replace />;
     }
 
     if (adminData) {
