@@ -10,8 +10,10 @@ import SignIn from "./pages/SignIn";
 import SuperAdminDashboard from './pages/SuperAdminDashboard.jsx';
 import SeedScript from "./SeedScript";
 import RenameDocument from "./Remane.jsx";
-import ThankYouPage from "./pages/ThankYouPage";
-import RegisterPage from "./pages/RegisterPage";
+// import ThankYouPage from "./pages/ThankYouPage";
+// import RegisterPage from "./pages/RegisterPage";
+import UploadTeamProgress from "./Team_Progress.jsx";
+import TeamAddButton from "./TeamLoader.jsx";
 
 
 function App() {
@@ -37,8 +39,8 @@ function App() {
 
       {/* Auth Login page */}
       <Route path="/login" element={<SignIn />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/thank-you" element={<ThankYouPage />} />
+      {/* <Route path="/register" element={<RegisterPage />} /> */}
+      {/* <Route path="/thank-you" element={<ThankYouPage />} /> */}
 
       {/* Admin Panel (Admin Auth protected) */}
       <Route
@@ -70,6 +72,9 @@ function App() {
       <Route path="*" element={<HomeRedirect />} />
       <Route path="/seed" element={<SeedScript />} />
       <Route path="/rename" element={<RenameDocument />} />
+      <Route path="/team_progress" element={<UploadTeamProgress />} />
+      <Route path="/team_button" element={<TeamAddButton />} />
+
     </Routes>
   );
 }

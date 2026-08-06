@@ -1,150 +1,180 @@
-.score-form-card{
-
-    background:#171717;
-
-    border-radius:22px;
-
-    padding:30px;
-
-    margin-top:25px;
-
+.score-form-card {
+    background: #171717;
+    border-radius: 22px;
+    padding: 32px;
+    margin-top: 25px;
+    border: 1px solid #262626;
 }
 
-.section-title{
-
-    margin-bottom:25px;
-
+.section-title {
+    margin-bottom: 28px;
 }
 
-.section-title h2{
-
-    color:white;
-
-    margin:0;
-
-    font-size:24px;
-
+.section-title h2 {
+    margin: 0;
+    font-size: 24px;
+    color: white;
+    font-weight: 700;
 }
 
-.section-title p{
-
-    color:#9ca3af;
-
-    margin-top:6px;
-
+.section-title p {
+    margin-top: 6px;
+    color: #9ca3af;
 }
 
-.score-grid{
-
-    display:grid;
-
-    grid-template-columns:repeat(3,1fr);
-
-    gap:20px;
-
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
 }
 
-.input-group{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:10px;
-
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.input-group label{
-
-    color:#d1d5db;
-
-    font-weight:600;
-
+.input-group label {
+    color: #d1d5db;
+    font-size: .95rem;
+    font-weight: 600;
 }
 
-.input-group input{
-
-    background:#0f0f0f;
-
-    border:1px solid #333;
-
-    color:white;
-
-    border-radius:12px;
-
-    padding:14px;
-
-    font-size:18px;
-
-    outline:none;
-
+.input-group input {
+    height: 52px;
+    background: #0f0f0f;
+    color: white;
+    border: 1px solid #303030;
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 18px;
+    outline: none;
+    transition: .2s;
 }
 
-.input-group input:focus{
-
-    border-color:#e10600;
-
+.input-group input:focus {
+    border-color: #e10600;
+    box-shadow: 0 0 0 3px rgba(225, 6, 0, .15);
 }
 
-.remarks-group{
-
-    margin-top:28px;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:12px;
-
-}
-
-.remarks-group label{
-
-    color:#d1d5db;
-
-    font-weight:600;
-
-}
-
-.remarks-group textarea{
-
-    background:#0f0f0f;
-
-    color:white;
-
-    border:1px solid #333;
-
-    border-radius:14px;
-
-    padding:16px;
-
-    resize:vertical;
-
-    outline:none;
-
-    font-size:16px;
-
-}
-
-.remarks-group textarea:focus{
-
-    border-color:#e10600;
-
-}
-
-@media(max-width:900px){
-
-.score-grid{
-
-    grid-template-columns:1fr;
-
-}
-
-}
-
-.input-group input[readonly], .input-group input.readonly-input {
+.readonly-input {
     background: #1f1f1f !important;
-    border-color: #333333;
-    color: #888888;
+    color: #8b8b8b !important;
     cursor: not-allowed;
+}
+
+.hint-card {
+    margin-top: 28px;
+    padding: 20px 22px;
+    background: #101010;
+    border: 1px solid #2d2d2d;
+    border-radius: 16px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hint-card h4 {
+    margin: 0;
+    font-size: 18px;
+    color: white;
+}
+
+.hint-card p {
+    margin-top: 5px;
+    color: #9ca3af;
+    font-size: .9rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 64px;
+    height: 34px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #444;
+    border-radius: 40px;
+    transition: .25s;
+    cursor: pointer;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    left: 4px;
+    top: 4px;
+    border-radius: 50%;
+    background: white;
+    transition: .25s;
+}
+
+.switch input:checked + .slider {
+    background: #e10600;
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(30px);
+}
+
+.remarks-group {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.remarks-group label {
+    color: #d1d5db;
+    font-weight: 600;
+}
+
+.remarks-group textarea {
+    background: #0f0f0f;
+    color: white;
+    border: 1px solid #303030;
+    border-radius: 14px;
+    padding: 16px;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    transition: .2s;
+    font-size: 16px;
+}
+
+.remarks-group textarea:focus {
+    border-color: #e10600;
+    box-shadow: 0 0 0 3px rgba(225, 6, 0, .15);
+}
+
+@media (max-width: 900px) {
+
+    .score-form-card {
+        padding: 22px;
+    }
+
+    .score-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hint-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .switch {
+        align-self: flex-end;
+    }
+
 }

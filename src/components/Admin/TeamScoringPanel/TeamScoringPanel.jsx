@@ -21,6 +21,10 @@ export default function TeamScoringPanel({
 
     remarks,
     setRemarks,
+ 
+    hintUsed,
+    setHintUsed,
+
 
     onSubmit,
     submitting,
@@ -53,6 +57,9 @@ export default function TeamScoringPanel({
 
                 penalty={penalty}
                 setPenalty={setPenalty}
+
+                hintUsed={hintUsed}
+                setHintUsed={setHintUsed}
 
                 remarks={remarks}
                 setRemarks={setRemarks}

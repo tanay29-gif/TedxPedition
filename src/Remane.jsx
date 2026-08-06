@@ -8,8 +8,8 @@ export default async function renameDocument() {
     // const user = auth.currentUser;
     // if (!user) return console.error("No user logged in");
 
-    const oldDocRef = doc(db, "teams", "testing"); // e.g., "testing"
-    const newDocRef = doc(db, "teams", "M9qElO0pVHRLav2QRUPvw3bd22G3M9qElO0pVHRLav2QRUPvw3bd22G3"); // Your Auth UID
+    const oldDocRef = doc(db, "teams", "M9qElO0pVHRLav2QRUPvw3bd22G3M9qElO0pVHRLav2QRUPvw3bd22G3"); // e.g., "testing"
+    const newDocRef = doc(db, "teams", "TEAM-I1UJ-650089"); // Your Auth UID
 
     const docSnap = await getDoc(oldDocRef);
 

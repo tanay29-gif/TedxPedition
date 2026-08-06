@@ -1,0 +1,80 @@
+/* ===========================
+   OFFLINE GAME
+=========================== */
+
+.finish-card{
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.finish-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+        radial-gradient(circle at top right,
+        rgba(225,6,0,.18),
+        transparent 60%);
+
+    pointer-events:none;
+
+}
+
+.finish-card h2{
+
+    font-size:2rem;
+
+    color:white;
+
+    margin-bottom:18px;
+
+}
+
+.finish-card p{
+
+    max-width:700px;
+
+    margin:0 auto;
+
+    color:#cfcfcf;
+
+    line-height:1.8;
+
+}
+
+.finish-button{
+
+    margin-top:32px;
+
+    background:#E10600;
+
+    font-size:1.1rem;
+
+    letter-spacing:.5px;
+
+}
+
+.finish-button:hover{
+
+    background:#ff1f18;
+
+    box-shadow:
+        0 0 30px rgba(225,6,0,.45),
+        0 10px 30px rgba(0,0,0,.35);
+
+}
+
+.ted-box{
+
+    font-size:1.08rem;
+
+    line-height:1.9;
+
+}

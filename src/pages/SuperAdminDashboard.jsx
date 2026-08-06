@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createAdmin, updateAdmin, disableAdmin, subscribeAdmins } from '../services/admin/adminService.js';
-import { startEvent, endEvent, subscribeEventStatus } from '../services/event/eventService.js';
+import { endEvent, subscribeEventStatus } from '../services/event/eventService.js';
+import { startEventForAllTeams } from "../services/event/eventStart";
 import './SuperAdminDashboard.css';
 
 const SuperAdminDashboard = () => {
@@ -40,7 +41,7 @@ const SuperAdminDashboard = () => {
   // --- EVENT CONTROLS ---
   const handleStartEvent = async () => {
     try {
-      await startEvent();
+      await startEventForAllTeams();
     } catch (err) {
       console.error(err);
       alert("Failed to start event: " + err.message);
@@ -68,7 +69,7 @@ const SuperAdminDashboard = () => {
       name: newAdminName,
       email: newAdminEmail,
       role: newAdminRole,
-      stallAssigned: newAdminRole === "super_admin" ? "All" : newAdminStall
+      stallAssigned: newAdminRole === "Super Admin" ? "All" : newAdminStall
     });
 
     if (res.success) {
@@ -116,7 +117,7 @@ const SuperAdminDashboard = () => {
     const res = await updateAdmin(editingAdmin.email, {
       name: editName,
       role: editRole,
-      stallAssigned: editRole === "super_admin" ? "All" : editStall
+      stallAssigned: (editRole === "Super Admin" || editRole === "stall_admin") ? "All" : editStall
     });
     
     if (res.success) {
@@ -137,8 +138,8 @@ const SuperAdminDashboard = () => {
 
   // Sort admins so Super Admins always appear at the top of the list
   const sortedAdmins = [...admins].sort((a, b) => {
-    if (a.role === "super_admin" && b.role !== "super_admin") return -1;
-    if (a.role !== "super_admin" && b.role === "super_admin") return 1;
+    if (a.role === "Super Admin" && b.role !== "Super Admin") return -1;
+    if (a.role !== "Super Admin" && b.role === "Super Admin") return 1;
     return 0;
   });
 
@@ -213,7 +214,7 @@ const SuperAdminDashboard = () => {
                   onChange={(e) => setNewAdminRole(e.target.value)}
                 >
                   <option value="stall_admin">Stall Admin</option>
-                  <option value="super_admin">Super Admin</option>
+                  <option value="Super Admin">Super Admin</option>
                 </select>
               </div>
 
@@ -242,8 +243,8 @@ const SuperAdminDashboard = () => {
               <li key={admin.id} className="data-item">
                 <div>
                   <strong>{admin.name}</strong> 
-                  <span className={admin.role === "super_admin" ? "role-badge super" : "role-badge stall"}>
-                    {admin.role === "super_admin" ? "Super Admin" : "Stall Admin"}
+                  <span className={(admin.role === "Super Admin" || admin.role === "stall_admin") ? "role-badge super" : "role-badge stall"}>
+                   {( admin.role === "Super Admin"|| admin.role === "stall_admin") ? "Super Admin" : "Stall Admin"}
                   </span>
                   <span className={`status-badge ${admin.active ? 'active' : 'inactive'}`}>
                     {admin.active ? 'ACTIVE' : 'INACTIVE'}
@@ -253,7 +254,7 @@ const SuperAdminDashboard = () => {
                     {admin.email}
                   </small>
                   <small style={{ color: '#ccc' }}>
-                    {admin.role === "super_admin" ? "Full System Access" : formatStall(admin.stallAssigned)}
+                    {admin.role === "Super Admin" ? "Full System Access" : formatStall(admin.stallAssigned)}
                   </small>
                 </div>
                 <div>
@@ -289,7 +290,7 @@ const SuperAdminDashboard = () => {
                   <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#ccc' }}>Role *</label>
                   <select className="tedx-input" value={editRole} onChange={(e) => setEditRole(e.target.value)}>
                     <option value="stall_admin">Stall Admin</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="Super Admin">Super Admin</option>
                   </select>
                 </div>
                 

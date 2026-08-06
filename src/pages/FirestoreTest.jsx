@@ -236,9 +236,9 @@ function FirestoreTest() {
 
                     <h3>Leader</h3>
 
-                    <p>Name : {team.leader.name}</p>
+                    <p>Name : {team.member[0]}</p>
 
-                    <p>Email : {team.leader.email}</p>
+                    <p>Email : {team.leaderEmail}</p>
 
                     <p>Phone : {team.leader.phone}</p>
 

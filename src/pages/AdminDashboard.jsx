@@ -12,7 +12,7 @@ import QRScanner from "../components/QRScanner/QRScanner";
 import { useAuth } from "../context/AuthContext";
 import { db, realtimeDb } from "../firebase/firebase";
 import { logout } from "../services/auth";
-import { getProgress, verifyStall, unlockNextStall, finishStall } from "../services/firestore/progress";
+import { getProgress, verifyStall, unlockNextStall, finishStall, startStall } from "../services/firestore/progress";
 import { getStallKey, getStallProgressValue } from "../services/firestore/stallKeys";
 import { getTeamById } from "../services/firestore/teams";
 import { calculateBonus } from "../services/scoring";
@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const [penaltyInput, setBonusPenalty] = useState("0");
   const [remarks, setRemarks] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [hintUsed, setHintUsed] = useState(false);
 
   //for fetching the leaderboard data from the real time database
   useEffect(() => {
@@ -52,35 +53,35 @@ export default function AdminDashboard() {
 
     const unsubscribe = onValue(leaderboardRef, (snapshot) => {
 
-        if(snapshot.exists()){
+      if (snapshot.exists()) {
 
-            const leaderboard = Object.entries(snapshot.val()).map(
+        const leaderboard = Object.entries(snapshot.val()).map(
 
-                ([teamId, data]) => ({
+          ([teamId, data]) => ({
 
-                    id: teamId,
+            id: teamId,
 
-                    ...data
+            ...data
 
-                })
+          })
 
-            );
+        );
 
-            setLeaderboardData(leaderboard);
+        setLeaderboardData(leaderboard);
 
-        }
+      }
 
-        else{
+      else {
 
-            setLeaderboardData([]);
+        setLeaderboardData([]);
 
-        }
+      }
 
     });
 
     return () => unsubscribe();
 
-}, []);
+  }, []);
 
 
 
@@ -99,115 +100,239 @@ export default function AdminDashboard() {
 
   // Listen to Active Teams from RTDB in Real-time
   useEffect(() => {
+    if (!adminData) return;
+
     const activeTeamsRef = ref(realtimeDb, "activeTeams");
+
     const unsubscribe = onValue(activeTeamsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setActiveTeamsList(snapshot.val());
-      } else {
+
+      if (!snapshot.exists()) {
         setActiveTeamsList({});
+        setLoading(false);
+        return;
       }
+
+      const teams = snapshot.val();
+
+      // Super Admin -> See all active teams
+      if (
+        adminData.role === "Super Admin" ||
+        adminData.stallAssigned === "All"
+      ) {
+        setActiveTeamsList(teams);
+      }
+      // Stall Admin -> Only assigned stall
+      else {
+        const filteredTeams = {};
+
+        Object.entries(teams).forEach(([teamId, team]) => {
+          if (team.currentStall === adminData.stallAssigned) {
+            filteredTeams[teamId] = team;
+          }
+        });
+
+        setActiveTeamsList(filteredTeams);
+      }
+
       setLoading(false);
     });
 
-    // Fetch team metadata once (IDs to Names mapping)
+    // Fetch Team Metadata
     const fetchTeamsMetadata = async () => {
       try {
         const teamsColl = collection(db, "teams");
         const snap = await getDocs(teamsColl);
+
         const meta = {};
+
         snap.forEach((doc) => {
           meta[doc.id] = doc.data();
         });
+
         setTeamsMetadata(meta);
       } catch (err) {
         console.error("Error fetching teams metadata:", err);
       }
     };
+
     fetchTeamsMetadata();
 
     return () => unsubscribe();
-  }, []);
 
+  }, [adminData]);
+
+
+      const getEffectiveStallNumber = (team) => {
+
+    // Super Admin
+    if (adminData?.stallAssigned === "All") {
+
+        if (!team?.currentStall) {
+            throw new Error("Team current stall not found.");
+        }
+
+        return Number(
+            team.currentStall.replace("STALL", "")
+        );
+    }
+
+    // Stall Admin
+    return selectedStallNum;
+};
+  //Logout function for the admin dashboard
   const handleLogout = async () => {
     await logout();
     navigate("/", { replace: true });
   };
 
-  const normalizeTeamId = (scannedCode) => {
+  const normalizeTeamQR = (scannedCode) => {
+    let teamId = "";
+    let action = "";
+
     if (typeof scannedCode === "string") {
       const trimmed = scannedCode.trim();
-      if (!trimmed) return "";
+      if (!trimmed) {
+        return { teamId: "", action: "" };
+      }
 
       try {
         const parsed = JSON.parse(trimmed);
-        if (parsed && typeof parsed === "object" && parsed.id) {
-          return String(parsed.id).trim().toUpperCase();
+
+        if (parsed && typeof parsed === "object") {
+          teamId = String(parsed.id || "").trim().toUpperCase();
+          action = String(parsed.action || "").trim().toUpperCase();
+
+          return {
+            teamId,
+            action
+          };
         }
       } catch {
-        // Fall back to treating the raw string as a team ID.
+        // Raw Team ID
+        return {
+          teamId: trimmed.toUpperCase(),
+          action: ""
+        };
       }
-
-      return trimmed.toUpperCase();
     }
 
     if (typeof scannedCode === "object" && scannedCode !== null) {
-      return String(scannedCode.id || "").trim().toUpperCase();
+      return {
+        teamId: String(scannedCode.id || "").trim().toUpperCase(),
+        action: String(scannedCode.action || "").trim().toUpperCase()
+      };
     }
 
-    return "";
+    return {
+      teamId: "",
+      action: ""
+    };
   };
 
   // Admin scans a Team QR code to open scoring
-  const handleTeamQRScan = async (scannedCode) => {
-    console.log("QR Scanned:", scannedCode);
-    setErrorMsg("");
+  // Admin scans a Team QR code to open scoring
+const handleTeamQRScan = async (scannedCode) => {
+  console.log("QR Scanned:", scannedCode);
 
-    let teamId = normalizeTeamId(scannedCode);
+  setErrorMsg("");
 
-    if (!teamId) {
-      setErrorMsg("Invalid Team QR.");
+  let { teamId, action } = normalizeTeamQR(scannedCode);
+
+  console.log("Action:", action, "Team:", teamId);
+
+  if (!teamId) {
+    setErrorMsg("Invalid Team QR.");
+    return;
+  }
+
+  // Handle URL QR codes
+  const match = teamId.match(/TEAM-[A-Z0-9]{4}-\d{6}/);
+
+  if (match) {
+    teamId = match[0];
+  }
+
+  try {
+    console.log("Fetching team:", teamId);
+
+    const teamData = await getTeamById(teamId);
+
+    console.log("Fetched Team:", teamData);
+
+    if (!teamData) {
+      setErrorMsg("Team not found.");
       return;
     }
 
-    // Parse teamId in case full QR URL is scanned
-    if (teamId.includes("TEAM")) {
-      const match = teamId.match(/TEAM0?([0-9]+)/);
-      if (match) {
-        teamId = `TEAM${match[1].padStart(3, "0")}`; // Normalizes TEAM001
-      }
+    // Universal stall number (works for both Super Admin and Stall Admin)
+    const stallNumber = getEffectiveStallNumber(teamData);
+
+    const expectedStall = getStallKey(stallNumber);
+
+    console.log("Effective Stall:", stallNumber);
+    console.log("Expected Stall:", expectedStall);
+    console.log("Current Stall:", teamData.currentStall);
+
+    // Only Stall Admins are restricted
+    if (
+      adminData?.stallAssigned !== "All" &&
+      teamData.currentStall !== expectedStall
+    ) {
+      setErrorMsg(
+        `${teamData.teamName} is currently assigned to ${teamData.currentStall}. They cannot be verified at ${expectedStall}.`
+      );
+      return;
     }
 
-    try {
-      const teamData = await getTeamById(teamId);
-      if (!teamData) {
-        setErrorMsg("Team not found. Please check the QR code / ID.");
+    switch (action) {
+      case "START_CHALLENGE":
+        console.log("Starting challenge...");
+
+        await startStall(teamData.id, stallNumber);
+
+        alert("Challenge Started");
+        break;
+
+      case "FINISH_CHALLENGE":
+        console.log("Finishing challenge...");
+
+        await finishStall(teamData.id, stallNumber);
+
+        await loadTeamScoringData(teamData, stallNumber);
+
+        break;
+
+      default:
+        setErrorMsg("Unknown QR action.");
         return;
-      }
-
-      await loadTeamScoringData(teamData);
-      setIsScannerOpen(false);
-    } catch (err) {
-      console.error("Error finding scanned team:", err);
-      setErrorMsg("Error communicating with database.");
     }
-  };
 
-  const loadTeamScoringData = async (teamData) => {
+    setIsScannerOpen(false);
+  } catch (err) {
+    console.error(err);
+    setErrorMsg(err.message || "Error communicating with database.");
+  }
+};
+
+  const loadTeamScoringData = async (teamData, stallNumber) => {
     setErrorMsg("");
     try {
       const progressData = await getProgress(teamData.id);
-      const stallKey = getStallKey(selectedStallNum);
-      const stallProg = getStallProgressValue(progressData, selectedStallNum);
+    const stallKey = getStallKey(stallNumber);
 
-      if (!stallProg) {
-        setErrorMsg(`Stall ${selectedStallNum} has not been unlocked or started by this team.`);
+    const stallProgress = getStallProgressValue(progressData, stallNumber);
+
+      if (!stallProgress) {
+        setErrorMsg(`Stall ${stallNumber} has not been unlocked or started by this team.`);
         return;
       }
 
+
+      console.log("Team data", teamData);
       setSelectedTeam(teamData);
       setSelectedTeamProgress(progressData);
       setSelectedTeamStallProgress(stallProg);
-      
+
       // Calculate bonus based on the participant's completed timeTaken
       const timeTaken = stallProg.timeTaken || 0;
       const systemBonus = calculateBonus(timeTaken);
@@ -241,21 +366,26 @@ export default function AdminDashboard() {
       const baseStallScore = Number(scoreInput) || 0;
       const penaltyDeduction = Number(penaltyInput) || 0;
 
+      const stallNumber = getEffectiveStallNumber(selectedTeam);
+
+
       // 2. Call verifyStall (saves score, remarks, verifiedBy, and status COMPLETED)
-      await verifyStall(selectedTeam.id, selectedStallNum, {
+      await verifyStall(selectedTeam.id, stallNumber, {
         baseScore: baseStallScore,
         penalty: penaltyDeduction,
+        hintUsed,
         remarks: remarks,
         verifiedBy: user.uid
       });
 
       // 3. Unlock next stall (calculates totals, updates team/RTDB leaderboard/activeTeam)
-      await unlockNextStall(selectedTeam.id, selectedStallNum);
+      await unlockNextStall(selectedTeam.id, hintUsed,);
 
       alert("Score saved and verified successfully!");
       setSelectedTeam(null);
       setSelectedTeamProgress(null);
       setSelectedTeamStallProgress(null);
+      setHintUsed(false);
 
     } catch (err) {
       console.error("Error submitting admin score:", err);
@@ -264,89 +394,105 @@ export default function AdminDashboard() {
       setSubmitting(false);
     }
   };
-  const currentStallKey = getStallKey(selectedStallNum);
 
-  const waitingTeams = Object.values(activeTeamsList).filter(
-    team =>
-        team.currentStall === currentStallKey &&
-        team.status === "VERIFYING"
-).length;
 
-const playingTeams = Object.values(activeTeamsList).filter(
-    team =>
-        team.currentStall === currentStallKey &&
-        team.status === "PLAYING"
-).length;
+const currentStallKey = getStallKey(selectedStallNum);
 
-// Placeholder until we implement analytics/history
-const verifiedTeams = 0;
+const waitingTeams = Object.values(activeTeamsList).filter(team => {
+  if (adminData?.stallAssigned === "All") {
+    return team.status === "VERIFYING";
+  }
+
+  return (
+    team.currentStall === currentStallKey &&
+    team.status === "VERIFYING"
+  );
+}).length;
+
+const playingTeams = Object.values(activeTeamsList).filter(team => {
+  if (adminData?.stallAssigned === "All") {
+    return team.status === "PLAYING";
+  }
+
+  return (
+    team.currentStall === currentStallKey &&
+    team.status === "PLAYING"
+  );
+}).length;
+
+
+  // Placeholder until we implement analytics/history
+  const verifiedTeams = 0;
   return (
     <div className="admin-dashboard">
-   <AdminHeader
-    adminData={adminData}
-    user={user}
-    onLogout={handleLogout}
-/>
-<DashboardStats
-    stallNumber={selectedStallNum}
-    waitingTeams={waitingTeams}
-    playingTeams={playingTeams}
-    verifiedTeams={verifiedTeams}
-/>
+      <AdminHeader
+        adminData={adminData}
+        user={user}
+        onLogout={handleLogout}
+      />
+      <DashboardStats
+        stallNumber={selectedStallNum}
+        waitingTeams={waitingTeams}
+        playingTeams={playingTeams}
+        verifiedTeams={verifiedTeams}
+      />
       <main className="admin-content">
         {/* Stall selector header */}
-        
+
         {selectedTeam ? (
 
-    <TeamScoringPanel
-        selectedTeam={selectedTeam}
-        selectedTeamStallProgress={selectedTeamStallProgress}
+          <TeamScoringPanel
+            selectedTeam={selectedTeam}
+            selectedTeamStallProgress={selectedTeamStallProgress}
 
-        score={scoreInput}
-        setScore={setScoreInput}
+            score={scoreInput}
+            setScore={setScoreInput}
 
-        bonus={bonusInput}
-        setBonus={setBonusInput}
+            bonus={bonusInput}
+            setBonus={setBonusInput}
 
-        penalty={penaltyInput}
-        setPenalty={setBonusPenalty}
+            penalty={penaltyInput}
+            setPenalty={setBonusPenalty}
 
-        remarks={remarks}
-        setRemarks={setRemarks}
+            remarks={remarks}
+            setRemarks={setRemarks}
 
-        submitting={submitting}
+            hintUsed={hintUsed}
+            setHintUsed={setHintUsed}
 
-        onSubmit={handleScoreSubmit}
-    />
+            submitting={submitting}
 
-) : (
+            onSubmit={handleScoreSubmit}
+          />
 
-    <>
+        ) : (
 
-        <section className="admin-teams-grid">
+          <>
 
-            <ScanCard
+            <section className="admin-teams-grid">
+
+              <ScanCard
                 errorMsg={errorMsg}
                 onScan={() => setIsScannerOpen(true)}
-            />
+              />
 
-            <ActiveTeamsTable
+              <ActiveTeamsTable
                 loading={loading}
                 activeTeamsList={activeTeamsList}
                 teamsMetadata={teamsMetadata}
                 selectedStallNum={selectedStallNum}
                 onScoreTeam={loadTeamScoringData}
+              />
+
+            </section>
+
+            <LeaderboardPreview
+              leaderboardData={leaderboardData}
             />
 
-        </section>
+          </>
 
-        <LeaderboardPreview
-            leaderboardData={leaderboardData}
-        />
-
-    </>
-
-)}
+        )}
       </main>
 
       {isScannerOpen && (
