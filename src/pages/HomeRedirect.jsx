@@ -12,15 +12,18 @@ function HomeRedirect() {
             </div>
         );
     }
-
     if (!user) {
-        return <Navigate to="/register" replace />;
+    return <Navigate to="/login" replace />;
     }
 
     if (adminData) {
-        if (adminData.role === "Super Admin" || adminData.role === "stall_admin") {
+        if (
+            adminData.role === "Super Admin" ||
+            adminData.role === "stall_admin"
+        ) {
             return <Navigate to="/super-admin" replace />;
         }
+
         return <Navigate to="/admin" replace />;
     }
 
@@ -28,8 +31,6 @@ function HomeRedirect() {
         return <Navigate to="/participant" replace />;
     }
 
-    // No admin role and no registered team found
     return <Navigate to="/no-team" replace />;
 }
-
 export default HomeRedirect;
