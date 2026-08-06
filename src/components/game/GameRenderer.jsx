@@ -6,6 +6,7 @@ import TedTalkGame from "./TedTalkGame";
 
 const GameRenderer = ({
     game,
+    team,
     stallNum,
     onComplete,
     success,

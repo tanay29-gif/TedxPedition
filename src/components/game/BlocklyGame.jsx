@@ -77,9 +77,9 @@ const BlocklyGame = ({
                 zoom: {
                     controls: true,
                     wheel: false,
-                    startScale: 1,
+                    startScale: 0.45,
                     maxScale: 1.5,
-                    minScale: 0.6,
+                    minScale: 0.2,
                     scaleSpeed: 1.2
                 },
 
@@ -391,7 +391,7 @@ const BlocklyGame = ({
                         <div className="target-preview">
 
                             <img
-                                src="/assets/games/1/tedx-logo.png"
+                                src="/assets/games/STALL01/tedx-logo.png"
                                 alt="TEDx IIT Gandhinagar"
                                 className="ted-logo"
                             />

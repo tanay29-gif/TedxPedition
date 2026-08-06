@@ -1,155 +1,107 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-:root{
-    --bg:#070707;
-    --card:#121212;
-    --card2:#181818;
-    --border:#2a2a2a;
-    --red:#EB0028;
-    --red2:#ff3b58;
-    --text:#ffffff;
-    --muted:#9b9b9b;
-    --success:#28d17c;
+:root {
+    --bg: #070707;
+    --card: #121212;
+    --border: #2a2a2a;
+    --red: #EB0028;
+    --text: #ffffff;
+    --muted: #9b9b9b;
+    --success: #28d17c;
 }
 
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-    font-family:"Inter",sans-serif;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
 }
 
-body{
-    background:#000;
-    color:white;
+body {
+    background: #000;
+    color: white;
 }
 
-/* ===========================
-Main Container
-=========================== */
 
-.blockly-game{
+/* ===============================
+   MAIN
+================================ */
 
-    min-height:100vh;
+.blockly-game {
+
+    min-height: 100vh;
+
+    width: 100%;
+
+    padding: 24px;
 
     background:
-    radial-gradient(circle at top left,
-    rgba(235,0,40,.12),
-    transparent 35%),
-
-    radial-gradient(circle at bottom right,
-    rgba(235,0,40,.08),
-    transparent 35%),
-
-    linear-gradient(180deg,#080808,#000);
-
-    padding:40px;
+        radial-gradient(
+            circle at top left,
+            rgba(235,0,40,.12),
+            transparent 35%
+        ),
+        linear-gradient(
+            180deg,
+            #080808,
+            #000
+        );
 }
 
-/* ===========================
-Grid Layout
-=========================== */
 
-.blockly-layout{
+/* ===============================
+   MAIN GRID
+   Blockly gets more space
+================================ */
 
-    display:grid;
+.blockly-layout {
 
-    grid-template-columns:2fr 1fr;
+    display: grid;
 
-    gap:28px;
+    grid-template-columns:
+        minmax(650px, 3.2fr)
+        minmax(280px, 1fr);
+
+    gap: 22px;
+
+    width:100%;
 
     align-items:start;
 }
 
-/* ===========================
-Cards
-=========================== */
+
+/* ===============================
+   CARDS
+================================ */
 
 .blockly-workspace-card,
 .mission-card,
 .target-card,
 .rules-card,
 .preview-card,
-.status-card{
+.status-card {
 
-    background:rgba(18,18,18,.82);
+    background:
+        rgba(18,18,18,.9);
 
-    backdrop-filter:blur(12px);
-
-    border:1px solid rgba(255,255,255,.08);
+    border:
+        1px solid rgba(255,255,255,.08);
 
     border-radius:18px;
 
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.6);
+
     overflow:hidden;
 
-    position:relative;
-
-    transition:.35s;
-
-    box-shadow:
-    0 12px 40px rgba(0,0,0,.55);
 }
 
-.blockly-workspace-card:hover,
-.mission-card:hover,
-.target-card:hover,
-.rules-card:hover,
-.preview-card:hover,
-.status-card:hover{
 
-    transform:translateY(-4px);
+/* ===============================
+ HEADER
+================================ */
 
-    border-color:rgba(235,0,40,.5);
-
-    box-shadow:
-    0 0 20px rgba(235,0,40,.15),
-    0 25px 60px rgba(0,0,0,.7);
-}
-
-/* Animated top border */
-
-.blockly-workspace-card::before,
-.mission-card::before,
-.target-card::before,
-.rules-card::before,
-.preview-card::before,
-.status-card::before{
-
-    content:"";
-
-    position:absolute;
-
-    left:0;
-    top:0;
-
-    width:100%;
-    height:3px;
-
-    background:linear-gradient(
-    90deg,
-    transparent,
-    var(--red),
-    transparent);
-
-    animation:moveGlow 4s linear infinite;
-}
-
-@keyframes moveGlow{
-
-    from{
-        background-position:-400px;
-    }
-
-    to{
-        background-position:400px;
-    }
-}
-
-/* ===========================
-Header
-=========================== */
-
-.blockly-card-header{
+.blockly-card-header {
 
     display:flex;
 
@@ -157,347 +109,315 @@ Header
 
     align-items:center;
 
-    padding:26px;
+    padding:22px;
+
 }
 
-.blockly-card-header h2{
 
-    font-size:28px;
+.blockly-card-header h2 {
+
+    font-size:24px;
 
     font-weight:800;
 
-    margin-bottom:6px;
 }
 
-.blockly-card-header p{
+
+.blockly-card-header p {
+
+    margin-top:8px;
 
     color:var(--muted);
 
-    line-height:1.6;
 }
 
-/* ===========================
-Attempts Badge
-=========================== */
 
-.attempt-badge{
+/* ===============================
+ ATTEMPTS
+================================ */
 
-    background:rgba(235,0,40,.12);
+.attempt-badge {
 
-    border:1px solid rgba(235,0,40,.4);
+    background:
+        rgba(235,0,40,.12);
 
-    color:white;
+    border:
+        1px solid rgba(235,0,40,.4);
 
     border-radius:12px;
 
-    padding:14px 22px;
+    padding:12px 18px;
 
     text-align:center;
 
-    font-weight:600;
 }
 
-.attempt-badge span{
+
+.attempt-badge span {
 
     display:block;
 
-    margin-top:6px;
+    font-size:24px;
 
     color:var(--red);
 
-    font-size:28px;
-
-    font-weight:800;
 }
 
-/* ===========================
-Blockly Area
-=========================== */
 
-.workspace-wrapper{
+/* ===============================
+ BLOCKLY WORKSPACE
+================================ */
 
-    padding:20px;
-}
 
-.blockly-workspace{
+.workspace-wrapper {
 
     width:100%;
 
-    height:650px;
+    padding:16px;
+
+}
+
+
+.blockly-workspace {
+
+    width:100%;
+
+    height:
+
+        min(75vh,720px);
+
+
+    min-height:500px;
 
     border-radius:14px;
 
     overflow:hidden;
 
-    border:1px solid rgba(255,255,255,.08);
+    border:
 
-    background:#1d1d1d;
+        1px solid rgba(255,255,255,.1);
+
+    background:#1b1b1b;
+
 }
 
-/* ===========================
-Buttons
-=========================== */
 
-.workspace-actions{
+/* Blockly SVG fix */
+
+.blocklySvg {
+
+    width:100% !important;
+
+    height:100% !important;
+
+}
+
+
+/* ===============================
+ BUTTONS
+================================ */
+
+
+.workspace-actions {
 
     display:flex;
 
-    gap:18px;
+    gap:14px;
 
-    padding:20px;
+    padding:18px;
+
 }
 
-.workspace-actions button{
+
+.workspace-actions button {
 
     flex:1;
+
+    padding:14px;
+
+    border-radius:12px;
 
     border:none;
 
     cursor:pointer;
 
-    font-size:16px;
-
     font-weight:700;
 
-    border-radius:12px;
+    font-size:15px;
 
-    padding:16px;
-
-    transition:.3s;
 }
 
-.run-btn{
 
-    background:linear-gradient(
-    135deg,
-    var(--red),
-    #ff3a56);
+.run-btn {
+
+    background:
+        linear-gradient(
+            135deg,
+            #EB0028,
+            #ff3b58
+        );
 
     color:white;
 
-    box-shadow:
-    0 10px 30px rgba(235,0,40,.35);
 }
 
-.run-btn:hover{
 
-    transform:translateY(-2px);
-
-    box-shadow:
-    0 18px 40px rgba(235,0,40,.45);
-}
-
-.reset-btn{
+.reset-btn {
 
     background:#222;
 
     color:white;
 
-    border:1px solid #444 !important;
+    border:
+
+        1px solid #444 !important;
+
 }
 
-.reset-btn:hover{
 
-    background:#2f2f2f;
-}
-
-/* ===========================
-Messages
-=========================== */
+/* ===============================
+ MESSAGES
+================================ */
 
 .blockly-error,
-.blockly-success{
+.blockly-success {
 
-    margin:20px;
+    margin:18px;
 
-    padding:18px;
+    padding:16px;
 
     border-radius:12px;
 
-    animation:fade .4s ease;
 }
 
-.blockly-error{
 
-    background:rgba(255,60,60,.12);
+.blockly-error {
 
-    border:1px solid rgba(255,0,0,.4);
+    background:
+        rgba(255,0,0,.12);
+
 }
 
-.blockly-success{
 
-    background:rgba(40,209,124,.12);
+.blockly-success {
 
-    border:1px solid rgba(40,209,124,.4);
+    background:
+        rgba(40,209,124,.12);
+
 }
 
-@keyframes fade{
 
-    from{
-        opacity:0;
-        transform:translateY(10px);
-    }
+/* ===============================
+ RIGHT PANEL
+================================ */
 
-    to{
-        opacity:1;
-        transform:none;
-    }
-}
 
-/* ===========================
-Right Side
-=========================== */
-
-.blockly-side-panel{
+.blockly-side-panel {
 
     display:flex;
 
     flex-direction:column;
 
-    gap:22px;
+    gap:18px;
+
 }
 
-/* Card Padding */
 
 .mission-card,
 .target-card,
 .rules-card,
 .preview-card,
-.status-card{
+.status-card {
 
-    padding:24px;
+    padding:20px;
+
 }
 
-.mission-card h3,
-.target-card h3,
-.rules-card h3,
-.preview-card h3,
-.status-card h3{
+
+.blockly-side-panel h3 {
+
+    font-size:20px;
 
     margin-bottom:10px;
 
-    font-size:22px;
-
-    color:white;
 }
 
-.mission-card p,
-.target-card p,
-.preview-card p{
+
+.blockly-side-panel p {
 
     color:var(--muted);
 
-    line-height:1.7;
+    line-height:1.6;
+
 }
 
-/* ===========================
-Mission
-=========================== */
 
-.mission-info{
+/* ===============================
+ TARGET IMAGE
+================================ */
 
-    margin-top:20px;
-}
 
-.mission-item{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    margin-top:12px;
-
-    padding:12px 0;
-
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-/* ===========================
-Rules
-=========================== */
-
-.rules-card ul{
-
-    padding-left:18px;
+.target-preview {
 
     margin-top:15px;
-}
-
-.rules-card li{
-
-    margin-bottom:14px;
-
-    color:#d6d6d6;
-}
-
-/* ===========================
-TED Logo
-=========================== */
-
-.target-preview{
-
-    margin-top:20px;
 
     display:flex;
 
     justify-content:center;
+
 }
 
-.ted-logo{
 
-    max-width:240px;
+.ted-logo {
 
-    filter:
-    drop-shadow(0 0 18px rgba(235,0,40,.45));
+    width:
 
-    transition:.35s;
+        min(80%,240px);
+
 }
 
-.ted-logo:hover{
 
-    transform:scale(1.05);
-}
+/* ===============================
+ PREVIEW
+================================ */
 
-/* ===========================
-Preview
-=========================== */
 
-.preview-canvas{
+.preview-placeholder {
 
-    margin-top:18px;
-}
-
-.preview-placeholder{
-
-    height:200px;
+    height:180px;
 
     display:flex;
-
-    flex-direction:column;
 
     justify-content:center;
 
     align-items:center;
 
-    color:#888;
+    flex-direction:column;
 
-    border:2px dashed rgba(255,255,255,.12);
+    border:
+
+        2px dashed rgba(255,255,255,.15);
 
     border-radius:12px;
+
+    color:#888;
+
 }
 
-.preview-placeholder span{
 
-    font-size:42px;
+.preview-placeholder span {
 
-    margin-bottom:10px;
+    font-size:38px;
+
 }
 
-/* ===========================
-Status
-=========================== */
 
-.status-item{
+/* ===============================
+ STATUS
+================================ */
+
+
+.status-item {
 
     display:flex;
 
@@ -505,65 +425,110 @@ Status
 
     padding:12px 0;
 
-    border-bottom:1px solid rgba(255,255,255,.08);
+    border-bottom:
+
+        1px solid rgba(255,255,255,.08);
+
 }
 
-.status-item strong{
+
+.status-item strong {
 
     color:var(--red);
+
 }
 
-/* ===========================
-Scrollbar
-=========================== */
 
-::-webkit-scrollbar{
+/* ===============================
+ SCROLLBAR
+================================ */
+
+::-webkit-scrollbar {
 
     width:8px;
+
 }
 
-::-webkit-scrollbar-thumb{
+
+::-webkit-scrollbar-thumb {
 
     background:var(--red);
 
     border-radius:20px;
+
 }
 
-/* ===========================
-Responsive
-=========================== */
 
-@media(max-width:1100px){
+/* ===============================
+ TABLET
+================================ */
 
-    .blockly-layout{
+@media(max-width:1200px) {
+
+
+    .blockly-layout {
 
         grid-template-columns:1fr;
+
     }
 
-    .blockly-workspace{
 
-        height:500px;
+    .blockly-workspace {
+
+        height:65vh;
+
     }
+
+
 }
 
-@media(max-width:700px){
 
-    .workspace-actions{
+/* ===============================
+ MOBILE
+================================ */
 
-        flex-direction:column;
+@media(max-width:700px) {
+
+
+    .blockly-game {
+
+        padding:10px;
+
     }
 
-    .blockly-game{
 
-        padding:18px;
-    }
-
-    .blockly-card-header{
+    .blockly-card-header {
 
         flex-direction:column;
-
-        gap:18px;
 
         align-items:flex-start;
+
+        gap:15px;
+
     }
+
+
+    .blockly-workspace {
+
+        height:55vh;
+
+        min-height:350px;
+
+    }
+
+
+    .workspace-actions {
+
+        flex-direction:column;
+
+    }
+
+
+    .blockly-side-panel {
+
+        gap:12px;
+
+    }
+
+
 }
