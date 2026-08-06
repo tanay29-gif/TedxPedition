@@ -2,10 +2,12 @@ import {
     doc,
     getDoc,
     serverTimestamp,
+    increment,
     updateDoc,
 } from "firebase/firestore";
+import { ref, get } from "firebase/database"; 
 
-import { db } from "../../firebase/firebase";
+import { db, realtimeDb } from "../../firebase/firebase";
 import { getStallKey, getStallProgressValue } from "./stallKeys";
 import { calculateBonus, calculateFinalScore } from "../scoring";
 import { updateActiveTeam } from "../realtime/activeTeams";
@@ -57,22 +59,42 @@ export const startStall = async (teamId, stallNumber) => {
     try {
         const progressRef = doc(db, progressCollection, teamId);
         const stallKey = getStallKey(stallNumber);
-        
-        // 1. Update Firestore progress document: startedAt and status PLAYING
+
+        // Check RTDB status
+        const activeTeamRef = ref(realtimeDb, `activeTeams/${teamId}`);
+        const snapshot = await get(activeTeamRef);
+
+        if (!snapshot.exists()) {
+            throw new Error("Team is not active.");
+        }
+        console.log("Active Team Data:", snapshot.val());
+
+        const activeTeam = snapshot.val();
+
+        if (
+            activeTeam.status !== "TRAVELLING" ||
+            activeTeam.currentStall !== stallKey
+        ) {
+            throw new Error(
+                `Team cannot start this stall. Current Status: ${activeTeam.status}, Current Stall: ${activeTeam.currentStall}`
+            );
+        }
+
+        // Update Firestore
         await updateDoc(progressRef, {
             [`${stallKey}.startedAt`]: serverTimestamp(),
             [`${stallKey}.status`]: "PLAYING"
         });
 
-        // 2. Update RTDB active teams status to PLAYING
+        // Update RTDB
         await updateActiveTeam(teamId, {
             currentStall: stallKey,
             status: "PLAYING"
         });
 
         console.log("Stall Started");
-    }
-    catch (error) {
+
+    } catch (error) {
         console.error(error);
         throw error;
     }
@@ -81,40 +103,94 @@ export const startStall = async (teamId, stallNumber) => {
 /**
  * Finish Stall
  */
+// export const finishStall = async (teamId, stallNumber) => {
+//     try {
+//         const progressRef = doc(db, progressCollection, teamId);
+//         const stallKey = getStallKey(stallNumber);
+
+//         const progressData = await getProgress(teamId);
+//         const stallProg = getStallProgressValue(progressData, stallNumber);
+
+//         const startedAt = stallProg?.startedAt;
+
+//         let timeTaken = 0;
+
+//         if (startedAt) {
+//             const startedAtMs = startedAt.toDate
+//                 ? startedAt.toDate().getTime()
+//                 : startedAt.seconds * 1000;
+
+//             timeTaken = Math.max(
+//                 0,
+//                 Math.floor((Date.now() - startedAtMs) / 1000)
+//             );
+//         }
+
+//         await updateDoc(progressRef, {
+//             [`${stallKey}.endedAt`]: serverTimestamp(),
+//             [`${stallKey}.timeTaken`]: timeTaken
+//         });
+
+//         console.log("Timer Stopped");
+//     }
+//     catch (error) {
+//         console.error(error);
+//         throw error;
+//     }
+// };
+
 export const finishStall = async (teamId, stallNumber) => {
     try {
         const progressRef = doc(db, progressCollection, teamId);
         const stallKey = getStallKey(stallNumber);
 
-        // 1. Read startedAt from progress document
+        // Check RTDB status
+        const activeTeamRef = ref(realtimeDb, `activeTeams/${teamId}`);
+        const snapshot = await get(activeTeamRef);
+
+        if (!snapshot.exists()) {
+            throw new Error("Team is not active.");
+        }
+
+        const activeTeam = snapshot.val();
+
+        if (
+            activeTeam.status !== "PLAYING" ||
+            activeTeam.currentStall !== stallKey
+        ) {
+            throw new Error(
+                `Team cannot finish this stall. Current Status: ${activeTeam.status}, Current Stall: ${activeTeam.currentStall}`
+            );
+        }
+
         const progressData = await getProgress(teamId);
         const stallProg = getStallProgressValue(progressData, stallNumber);
+
         const startedAt = stallProg?.startedAt;
 
         let timeTaken = 0;
+
         if (startedAt) {
-            const startedAtMs = startedAt.toDate 
-                ? startedAt.toDate().getTime() 
-                : (startedAt.seconds ? startedAt.seconds * 1000 : new Date(startedAt).getTime());
-            timeTaken = Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000));
+            const startedAtMs = startedAt.toDate
+                ? startedAt.toDate().getTime()
+                : startedAt.seconds * 1000;
+
+            timeTaken = Math.max(
+                0,
+                Math.floor((Date.now() - startedAtMs) / 1000)
+            );
         }
 
-        // 2. Update Firestore progress: endedAt, timeTaken, status VERIFYING
         await updateDoc(progressRef, {
             [`${stallKey}.endedAt`]: serverTimestamp(),
-            [`${stallKey}.timeTaken`]: timeTaken,
-            [`${stallKey}.status`]: "VERIFYING"
+            [`${stallKey}.timeTaken`]: timeTaken
         });
 
-        // 3. Update RTDB active teams status to VERIFYING
-        await updateActiveTeam(teamId, {
-            currentStall: stallKey,
-            status: "VERIFYING"
-        });
+        // Team is now waiting for admin verification
 
-        console.log("Stall Finished");
-    }
-    catch (error) {
+        console.log("Timer Stopped");
+
+    } catch (error) {
         console.error(error);
         throw error;
     }
@@ -126,7 +202,7 @@ export const finishStall = async (teamId, stallNumber) => {
 export const verifyStall = async (
     teamId,
     stallNumber,
-    { baseScore, penalty, remarks, verifiedBy }
+    { baseScore, penalty, hintUsed, remarks, verifiedBy }
 ) => {
     try {
         const progressRef = doc(db, progressCollection, teamId);
@@ -147,6 +223,9 @@ export const verifyStall = async (
             [`${stallKey}.bonus`]: bonus,
             [`${stallKey}.penalty`]: penalty,
             [`${stallKey}.finalScore`]: finalScore,
+
+            [`${stallKey}.hintUsed`]: hintUsed,
+
             [`${stallKey}.remarks`]: remarks || "",
             [`${stallKey}.verifiedBy`]: verifiedBy,
             [`${stallKey}.verifiedAt`]: serverTimestamp(),
@@ -217,54 +296,103 @@ export const updateTeamTotals = async (teamId) => {
 /**
  * Move team to the next stall and update status
  */
-export const unlockNextStall = async (teamId, currentStallNumber) => {
+export const unlockNextStall = async (teamId, hintUsed) => {
     try {
-        const nextStallNum = currentStallNumber + 1;
-        const nextStallKey = getStallKey(nextStallNum);
+        // 1. Get Team Details
+        const teamRef = doc(db, "teams", teamId);
+        const teamSnap = await getDoc(teamRef);
 
-        // 1. Recalculate totals across completed stalls
-        const { totalScore, totalTime, teamName } = await updateTeamTotals(teamId);
-
-        // 2. In progress document, update the next stall status to READY if nextStallNum <= 6
-        if (nextStallNum <= 6) {
-            const progressRef = doc(db, progressCollection, teamId);
-            await updateDoc(progressRef, {
-                [`${nextStallKey}.status`]: "READY"
-            });
+        if (!teamSnap.exists()) {
+            throw new Error("Team not found.");
         }
 
-        // 3. Update Team profile in Firestore
-        const teamRef = doc(db, "teams", teamId);
-        await updateDoc(teamRef, {
-            currentStall: getStallKey(nextStallNum),
-            totalScore: totalScore,
-            totalTime: totalTime,
-            updatedAt: serverTimestamp()
+        const teamData = teamSnap.data();
+
+        const stallSequence = teamData.stallSequence || [];
+        const currentIndex = Number(teamData.currentStallIndex ?? 0);
+
+        const nextIndex = currentIndex + 1;
+
+        // 2. Update total score & total time
+        const { totalScore, totalTime, teamName } =
+            await updateTeamTotals(teamId);
+
+        // ======================================================
+        // EVENT COMPLETED (LAST STALL FINISHED)
+        // ======================================================
+        if (nextIndex >= stallSequence.length) {
+
+            await updateDoc(teamRef, {
+                totalScore,
+                totalTime,
+                updatedAt: serverTimestamp()
+            });
+
+            await updateLeaderboard(teamId, {
+                teamName: teamName || teamId,
+                totalScore,
+                totalTime,
+                currentStall: teamData.currentStall
+            });
+
+            await updateActiveTeam(teamId, {
+                currentStall: teamData.currentStall,
+                status: "COMPLETED"
+            });
+
+            console.log(`${teamId} completed the event.`);
+            return;
+        }
+
+        // ======================================================
+        // NEXT RANDOM STALL
+        // ======================================================
+
+        const nextStall = stallSequence[nextIndex];
+
+        // Unlock next stall
+        const progressRef = doc(db, progressCollection, teamId);
+
+        await updateDoc(progressRef, {
+            [`${nextStall}.status`]: "TRAVELLING"
         });
 
-        // 4. Update Realtime Database leaderboard entry
+        // Update Team document
+        const teamUpdate = {
+            currentStall: nextStall,
+            currentStallIndex: nextIndex,
+            totalScore,
+            totalTime,
+            updatedAt: serverTimestamp(),
+        };
+
+        if (hintUsed) {
+            teamUpdate.coins = increment(-1);
+        }
+
+        await updateDoc(teamRef, teamUpdate);
+
+        // Update Leaderboard
         await updateLeaderboard(teamId, {
             teamName: teamName || teamId,
-            totalScore: totalScore,
-            totalTime: totalTime,
-            currentStall: getStallKey(nextStallNum)
+            totalScore,
+            totalTime,
+            currentStall: nextStall
         });
 
-        // 5. Update Realtime Database activeTeam status (status is READY for next stall, or FINISHED)
+        // Update Active Team
         await updateActiveTeam(teamId, {
-            currentStall: getStallKey(nextStallNum),
-            status: nextStallNum > 7 ? "FINISHED" : "READY",
-            updatedAt: Date.now()
+            currentStall: nextStall,
+            status: "TRAVELLING"
         });
 
-        console.log(`Unlocked Next Stall ${nextStallNum}`);
-    }
-    catch (error) {
-        console.error("Error in unlockNextStall:", error);
+        console.log(`${teamId} unlocked ${nextStall}`);
+
+    } catch (error) {
+        console.error("Error unlocking next stall:", error);
         throw error;
     }
 };
-
 /**
  * Mark Hint Used
  */
@@ -323,3 +451,4 @@ export const updateTimeTaken = async (teamId, stallNumber, seconds) => {
         throw error;
     }
 };
+

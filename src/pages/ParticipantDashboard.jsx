@@ -7,9 +7,9 @@ import { logout } from "../services/auth";
 import { getHint } from "../services/firestore/hints";
 import { markHintUsed } from "../services/firestore/progress";
 import { getStallKey, getStallNumber, getStallProgressValue } from "../services/firestore/stallKeys";
-import { getStallByOrder } from "../services/firestore/stalls";
+import { getStallByOrder,  getStallById} from "../services/firestore/stalls";
 import { getTeamByLeaderEmail, updateTeam } from "../services/firestore/teams";
-import { loadClue } from "../services/clues/clueLoader";
+// import { loadClue } from "../services/clues/clueLoader";
 import { validateScannedStall, startMission, finishMission } from "../services/stalls/stallService";
 import { subscribeEventStatus } from "../services/event/eventService";
 
@@ -26,7 +26,8 @@ import ValidationDialog from "../components/Participant/ValidationDialog/Validat
 import ChallengePage from "./ChallengePage";
 import FinalLocation from "./FinalLocation";
 import FinishPage from "./FinishPage";
-import WaitingForVerificationPage from "./WaitingForVerificationPage";
+import TravelPage from "../components/Participant/TravelPage"
+// import WaitingForVerificationPage from "./WaitingForVerificationPage";
 
 import "./ParticipantDashboard.css";
 
@@ -38,15 +39,12 @@ export default function ParticipantDashboard() {
   const [progress, setProgress] = useState(null);
   const [currentStallMeta, setCurrentStallMeta] = useState(null);
   const [currentClue, setCurrentClue] = useState(null);
-  const [validationResult, setValidationResult] = useState(null);
   const [hintText, setHintText] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Reusable Component states
   const [isTeamQROpen, setIsTeamQROpen] = useState(false);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isHintOpen, setIsHintOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [eventState, setEventState] = useState(null);
 
   useEffect(() => {
@@ -60,8 +58,8 @@ export default function ParticipantDashboard() {
   useEffect(() => {
     if (!user?.email) return;
 
-    let unsubscribeTeam = () => {};
-    let unsubscribeProgress = () => {};
+    let unsubscribeTeam = () => { };
+    let unsubscribeProgress = () => { };
 
     const initListeners = async () => {
       try {
@@ -106,32 +104,40 @@ export default function ParticipantDashboard() {
 
   // Load Stall Metadata & Clue when currentStall changes
   useEffect(() => {
-    const currentStallNum = getStallNumber(team?.currentStall);
-    if (!currentStallNum) return;
+    const currentStallId = team?.currentStall;
+
+    if (!currentStallId) return;
 
     const fetchStallMeta = async () => {
       try {
-        const stallMeta = await getStallByOrder(currentStallNum);
+        const stallMeta = await getStallById(currentStallId);
         setCurrentStallMeta(stallMeta);
 
-        // Fetch clue data
-        const stallKey = getStallKey(currentStallNum);
-        const clueData = await loadClue(stallKey);
-        setCurrentClue(clueData);
+        // const clueData = await getClue(currentStallId);
 
-        const stallProg = getStallProgressValue(progress, currentStallNum);
+        setCurrentClue({
+    title: stallMeta.clueTitle,
+    description: stallMeta.clueDescription,
+    clue: stallMeta.clue,
+    location:stallMeta.location,
+
+});
+        const stallProg = getStallProgressValue(progress, currentStallId);
+
         if (stallProg?.hintUsed) {
-          const hintDoc = await getHint(getStallKey(currentStallNum));
-          setHintText(hintDoc?.hintText || `Hint for Stall ${currentStallNum}`);
+          const hintDoc = await getHint(currentStallId);
+          setHintText(hintDoc?.hintText || "Hint unlocked");
         } else {
           setHintText("");
         }
+
       } catch (err) {
-        console.error("Error fetching stall metadata or clue:", err);
+        console.error("Error fetching stall metadata:", err);
       }
     };
 
     fetchStallMeta();
+
   }, [team?.currentStall, progress]);
 
   const handleLogout = async () => {
@@ -139,52 +145,7 @@ export default function ParticipantDashboard() {
     navigate("/", { replace: true });
   };
 
-  // Participant scans a QR Code to unlock a stall
-  const handleStallQRScan = async (scannedCode) => {
-    setErrorMsg("");
-
-    const expectedStallId = team?.currentStall || "STALL01";
-    const validation = validateScannedStall(scannedCode, expectedStallId);
-
-    setValidationResult(validation);
-
-    if (validation.valid) {
-      // Correct QR Code - Close scanner first, show correct screen, wait, then trigger startMission
-      setIsScannerOpen(false);
-      setTimeout(async () => {
-        try {
-          const expectedStallNum = getStallNumber(expectedStallId);
-          await startMission(team.id, expectedStallNum);
-          setValidationResult(null);
-        } catch (err) {
-          console.error("Failed to start mission:", err);
-          setErrorMsg("Error starting challenge in database. Please retry.");
-          setValidationResult(null);
-        }
-      }, 1500);
-    } else {
-      // Wrong QR Code - Close scanner to stop camera and display the ValidationDialog
-      setIsScannerOpen(false);
-    }
-  };
-
-  const handleCloseValidationDialog = () => {
-    const wasWrong = validationResult && !validationResult.valid;
-    setValidationResult(null);
-    if (wasWrong) {
-      setIsScannerOpen(true);
-    }
-  };
-
-  const handleChallengeComplete = async () => {
-    try {
-      const currentStallNum = getStallNumber(team.currentStall);
-      await finishMission(team.id, currentStallNum);
-    } catch (err) {
-      console.error("Failed to complete challenge:", err);
-      alert("Failed to submit challenge. Please try again.");
-    }
-  };
+  const handleChallengeComplete = async () => {}
 
   // Spend Hint Coin logic
   const handleUseHintConfirm = async () => {
@@ -284,7 +245,7 @@ export default function ParticipantDashboard() {
 
   const currentStallNum = getStallNumber(team.currentStall);
   const stallProgress = getStallProgressValue(progress, currentStallNum);
-  
+
   // Game finished completely (all 7 stages done)
   if (currentStallNum > 7 || (currentStallNum === 7 && getStallProgressValue(progress, 7)?.status === "COMPLETED")) {
     return <FinishPage team={team} progress={progress} handleLogout={handleLogout} />;
@@ -299,16 +260,30 @@ export default function ParticipantDashboard() {
   const currentStallStatus = stallProgress?.status || "READY";
 
   // State: Finished playing, waiting for admin approval
-  if (currentStallStatus === "VERIFYING") {
+  // if (currentStallStatus === "VERIFYING") {
+  //   return (
+  //     <WaitingForVerificationPage
+  //       team={team}
+  //       stallNum={currentStallNum}
+  //       stallProgress={stallProgress}
+  //       handleLogout={handleLogout}
+  //     />
+  //   );
+  // }
+
+    // State: Travelling to next stall
+if (currentStallStatus === "TRAVELLING") {
     return (
-      <WaitingForVerificationPage
-        team={team}
-        stallNum={currentStallNum}
-        stallProgress={stallProgress}
-        handleLogout={handleLogout}
-      />
+        <TravelPage
+            team={team}
+            currentStallNum={currentStallNum}
+            currentClue={currentClue}
+            hintText={hintText}
+            onUseHintClick={() => setIsHintOpen(true)}
+            handleLogout={handleLogout}
+        />
     );
-  }
+}
 
   // State: Started playing, active challenge screen
   if (currentStallStatus === "PLAYING") {
@@ -366,8 +341,6 @@ export default function ParticipantDashboard() {
         </section>
 
         <section className="glass-card active-stall-card glow-red pulsing-border">
-          {errorMsg && <div className="scanner-error-box">⚠️ {errorMsg}</div>}
-
           <TimeCard
             startedAt={stallProgress?.startedAt}
             endedAt={stallProgress?.endedAt}
@@ -385,25 +358,18 @@ export default function ParticipantDashboard() {
             status={cardStatusClass}
             onOpenQR={() => setIsTeamQROpen(true)}
           />
+
+          
         </section>
       </main>
 
       {/* Dialog Modals */}
-      {isScannerOpen && (
-        <QRScanner
-          title="Scan Stall QR"
-          placeholder="Enter code manually..."
-          onScanSuccess={handleStallQRScan}
-          onClose={() => {
-            setIsScannerOpen(false);
-            setErrorMsg("");
-          }}
-        />
-      )}
+
+
       {isTeamQROpen && (
         <TeamQR
-            team={team}
-            onClose={() => setIsTeamQROpen(false)}
+          team={team}
+          onClose={() => setIsTeamQROpen(false)}
         />
       )}
 
@@ -414,11 +380,6 @@ export default function ParticipantDashboard() {
         onClose={() => setIsHintOpen(false)}
       />
 
-      <ValidationDialog
-        isOpen={validationResult !== null}
-        result={validationResult}
-        onClose={handleCloseValidationDialog}
-      />
     </div>
   );
 }

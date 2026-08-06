@@ -11,9 +11,11 @@ export default function TeamQRCodeCard({
     const qrData = JSON.stringify({
         v: 1,
         type: "TEAM",
+    action: "START_CHALLENGE",
         id: teamId,
     });
 
+    console.log("TeamQRCodeCard Rendered", teamId, teamName, status);
     return (
 
         <section className="team-qr-card">

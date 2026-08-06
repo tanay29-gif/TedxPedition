@@ -13,20 +13,20 @@ const eventDocRef = doc(db, "event_status", "current");
 /**
  * Starts the event. Sets status to RUNNING.
  */
-export const startEvent = async () => {
-  try {
-    await setDoc(eventDocRef, {
-      status: "RUNNING",
-      startedAt: serverTimestamp(),
-      endedAt: null,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    return { success: true };
-  } catch (error) {
-    console.error("Error starting event:", error);
-    throw error;
-  }
-};
+// export const startEvent = async () => {
+//   try {
+//     await setDoc(eventDocRef, {
+//       status: "RUNNING",
+//       startedAt: serverTimestamp(),
+//       endedAt: null,
+//       updatedAt: serverTimestamp()
+//     }, { merge: true });
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Error starting event:", error);
+//     throw error;
+//   }
+// };
 
 /**
  * Ends the event. Sets status to ENDED.

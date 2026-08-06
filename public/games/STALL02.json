@@ -1,0 +1,119 @@
+{
+  "type": "ted-talk",
+  "title": "TED Talk Word Hunt",
+  "description": "Watch the TED Talks and collect all six words. Arrange them to reveal the hidden sentence.",
+  "instruction": "Each clue contains a TED Talk and a timestamp.\nGo to the timestamp.\nFind the highlighted word.\nCollect all six words.\nArrange them into the correct sentence.\nShow the completed sentence to the volunteer.",
+
+  "sets": [
+    {
+      "id": 1,
+      "sentence": "The future belongs to the curious",
+      "words": [
+        {
+          "word": "The",
+          "url": "https://youtu.be/iG9CE55wbtY?si=JQZRtwFCPq04nzS0",
+          "timestamp": "0:44"
+        },
+        {
+          "word": "Future",
+          "url": "https://youtu.be/zIwLWfaAg-8?si=FzFIkkhEaCABWuG0",
+          "timestamp": "0:26"
+        },
+        {
+          "word": "Belongs",
+          "url": "https://youtu.be/3m6dV7Xo3Vc?si=vbPUnDGduSNsRzAS",
+          "timestamp": "5:11"
+        },
+        {
+          "word": "To",
+          "url": "https://youtu.be/D9Ihs241zeg?si=GXDwBykqftfiCBzG",
+          "timestamp": "0:43"
+        },
+        {
+          "word": "The",
+          "url": "https://youtu.be/iG9CE55wbtY?si=JQZRtwFCPq04nzS0",
+          "timestamp": "0:44"
+        },
+        {
+          "word": "Curious",
+          "url": "https://youtu.be/YsYHqfk0X2A?si=-Ou2AADpnnonI1iR",
+          "timestamp": "5:28"
+        }
+      ]
+    },
+
+{
+  "id": 2,
+  "sentence": "Stories have power to create home",
+  "words": [
+    {
+      "word": "Stories",
+      "url": "https://youtu.be/D9Ihs241zeg?si=rP2dVvb0G5sVga_S",
+      "timestamp": "0:17"
+    },
+    {
+      "word": "Have",
+      "url": "https://youtu.be/3m6dV7Xo3Vc?si=e9ATobjAakqgZTNk",
+      "timestamp": "1:20"
+    },
+    {
+      "word": "Power",
+      "url": "https://youtu.be/D9Ihs241zeg?si=rP2dVvb0G5sVga_S",
+      "timestamp": "9:42"
+    },
+    {
+      "word": "To",
+      "url": "https://youtu.be/D9Ihs241zeg?si=GXDwBykqftfiCBzG",
+      "timestamp": "0:43"
+    },
+    {
+      "word": "Create",
+      "url": "https://youtu.be/3m6dV7Xo3Vc?si=BOyiOgqwuOhhhh4J",
+      "timestamp": "4:25"
+    },
+    {
+      "word": "Home",
+      "url": "https://youtu.be/3m6dV7Xo3Vc?si=BOyiOgqwuOhhhh4J",
+      "timestamp": "5:45"
+    }
+  ]
+},
+
+{
+  "id": 3,
+  "sentence": "Great ideas can change our world",
+  "words": [
+    {
+      "word": "Great",
+      "url": "https://youtu.be/qp0HIF3SfI4?si=h4XKnecMDCwtAfUw",
+      "timestamp": "1:00"
+    },
+    {
+      "word": "Ideas",
+      "url": "https://youtu.be/iG9CE55wbtY?si=KN7O6eyaKZb7txtk",
+      "timestamp": "11:32"
+    },
+    {
+      "word": "Can",
+      "url": "https://youtu.be/arj7oStGLkU?si=Hx-IimjghPLfCgQ1",
+      "timestamp": "3:34"
+    },
+    {
+      "word": "Change",
+      "url": "https://youtu.be/Ks-_Mh1QhMc?si=hNLJLBXEI9ZSnLb7",
+      "timestamp": "0:24"
+    },
+    {
+      "word": "Our",
+      "url": "https://youtu.be/c0KYU2j0TM4?si=BoK5iFxqf1KbyOKT",
+      "timestamp": "5:18"
+    },
+    {
+      "word": "World",
+      "url": "https://youtu.be/8KkKuTCFvzI?si=SZ-a_eoXhV8aQyrI",
+      "timestamp": "3:26"
+    }
+  ]
+}
+  ]
+}

@@ -19,6 +19,7 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
           setScannerInitialized(true);
 
           await html5QrCode.start(
+            
             { facingMode: "environment" },
             {
               fps: 10,
@@ -26,11 +27,13 @@ export default function QRScanner({ onScanSuccess, onScanFailure, onClose, title
             },
             (decodedText) => {
               // On success
+              console.log("Scanner started", decodedText);
               onScanSuccess(decodedText);
               stopScanner(html5QrCode);
             },
             (errorMessage) => {
               // Silent failure (polling scans constantly)
+              console.log("Scanner error:", errorMessage);
               if (onScanFailure) onScanFailure(errorMessage);
             }
           );

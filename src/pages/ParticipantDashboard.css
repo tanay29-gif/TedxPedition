@@ -247,6 +247,8 @@
   color: var(--text-muted);
 }
 
+
+
 /* Responsive Layout */
 @media(max-width: 900px) {
   .team-status-grid {

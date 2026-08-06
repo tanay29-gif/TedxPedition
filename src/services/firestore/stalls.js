@@ -53,6 +53,18 @@ export const getAllStalls = async () => {
  * Returns one stall
  */
 
+export const getClue = async (stallId) => {
+
+    const stall = await getStallById(stallId);
+
+    if (!stall) return null;
+
+    return {
+        title: stall.clueTitle,
+        description: stall.clueDescription
+    };
+};
+
 export const getStallById = async (stallId) => {
 
     try {

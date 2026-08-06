@@ -4,8 +4,19 @@ import { logout } from "../services/auth";
 import "./NoTeam.css";
 
 export default function NoTeam() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+      const { teamData, adminData, loading } = useAuth();
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
+    useEffect(() => {
+        // If data arrives while on this page, rescue the user
+        if (!loading) {
+            if (adminData) navigate("/admin");
+            else if (teamData) navigate("/participant");
+        }
+    }, [teamData, adminData, loading, navigate]);
+
+    if (loading) return <div>Loading...</div>;
 
   const handleLogout = async () => {
     await logout();
