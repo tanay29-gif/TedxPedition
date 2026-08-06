@@ -402,6 +402,10 @@ export default function ParticipantDashboard() {
           currentClue={currentClue}
           hintText={hintText}
           onUseHintClick={() => {
+<<<<<<< HEAD
+=======
+            console.log("Hint button clicked");
+>>>>>>> main
             setIsHintOpen(true);
           }}
           handleLogout={handleLogout}
@@ -427,6 +431,10 @@ export default function ParticipantDashboard() {
         stallMeta={currentStallMeta}
         hintText={hintText}
         onUseHintClick={() => {
+<<<<<<< HEAD
+=======
+          console.log("Hint button clicked");
+>>>>>>> main
           setIsHintOpen(true);
         }}
         onComplete={handleChallengeComplete}
