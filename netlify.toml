@@ -1,0 +1,11 @@
+[build]
+  # The command to run to build your site
+  command = "npm run build"
+  # The directory that contains the deploy-ready assets
+  publish = "dist"
+
+[[redirects]]
+  # This fixes the 404 error on refresh for SPAs
+  from = "/*"
+  to = "/index.html"
+  status = 200
